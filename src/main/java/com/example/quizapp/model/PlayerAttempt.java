@@ -17,24 +17,24 @@ public class PlayerAttempt {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // who is playing
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id")
     private User user;
 
-    // which tournament
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tournament_id")
     private QuizTournament tournament;
 
-    // progress + score
+
     @Column(nullable = false)
     private int currentIndex = 0;   // 0..9 (10 questions)
 
     @Column(nullable = false)
     private int score = 0;          // 0..10
 
-    // lifecycle
+
     @Column(nullable = false)
     private LocalDateTime startedAt = LocalDateTime.now();
 
@@ -43,7 +43,7 @@ public class PlayerAttempt {
     @Column(nullable = false)
     private boolean completed = false;
 
-    // Getters & Setters
+
     public Long getId() { return id; }
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
