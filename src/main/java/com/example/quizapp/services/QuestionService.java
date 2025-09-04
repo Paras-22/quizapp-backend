@@ -1,6 +1,6 @@
 package com.example.quizapp.services;
 
-import com.example.quizapp.db.QuestionRepo;
+import com.example.quizapp.db.QuestionRepository;
 import com.example.quizapp.model.Question;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,38 +12,38 @@ import java.util.Optional;
 public class QuestionService {
 
     @Autowired
-    private QuestionRepo questionRepo;
+    private QuestionRepository questionRepository;
 
     // CREATE
     public Question addQuestion(Question question) {
-        return questionRepo.save(question);
+        return questionRepository.save(question);
     }
 
     // READ ALL
     public List<Question> getAllQuestions() {
-        return questionRepo.findAll();
+        return questionRepository.findAll();
     }
 
     // READ BY ID
     public Optional<Question> getQuestionById(Long id) {
-        return questionRepo.findById(id);
+        return questionRepository.findById(id);
     }
 
     // UPDATE
     public Question updateQuestion(Long id, Question updatedQuestion) {
-        return questionRepo.findById(id).map(existing -> {
+        return questionRepository.findById(id).map(existing -> {
             existing.setQuestionText(updatedQuestion.getQuestionText());
             existing.setOptionA(updatedQuestion.getOptionA());
             existing.setOptionB(updatedQuestion.getOptionB());
             existing.setOptionC(updatedQuestion.getOptionC());
             existing.setOptionD(updatedQuestion.getOptionD());
             existing.setCorrectAnswer(updatedQuestion.getCorrectAnswer());
-            return questionRepo.save(existing);
+            return questionRepository.save(existing);
         }).orElse(null);
     }
 
     // DELETE
     public void deleteQuestion(Long id) {
-        questionRepo.deleteById(id);
+        questionRepository.deleteById(id);
     }
 }

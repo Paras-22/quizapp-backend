@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/player")
@@ -20,30 +19,34 @@ public class PlayerController {
         this.service = service;
     }
 
-    // Start a new attempt
-    @PostMapping("/start")
-    public ResponseEntity<PlayerAttempt> startAttempt(@RequestBody Map<String, String> body) {
-        String username = body.get("username");
-        Long tournamentId = Long.parseLong(body.get("tournamentId"));
+    // 🔹 Start attempt
+    @PostMapping("/start/{username}/{tournamentId}")
+    public ResponseEntity<PlayerAttempt> startAttempt(
+            @PathVariable String username,
+            @PathVariable Long tournamentId
+    ) {
         return ResponseEntity.ok(service.startAttempt(username, tournamentId));
     }
 
-    // Get tournament questions
+    // 🔹 Get tournament questions
     @GetMapping("/questions/{tournamentId}")
-    public ResponseEntity<List<TournamentQuestion>> getQuestions(@PathVariable Long tournamentId) {
+    public ResponseEntity<List<TournamentQuestion>> getQuestions(
+            @PathVariable Long tournamentId
+    ) {
         return ResponseEntity.ok(service.getTournamentQuestions(tournamentId));
     }
 
-    // Submit answer
-    @PostMapping("/answer")
-    public ResponseEntity<PlayerAnswer> submitAnswer(@RequestBody Map<String, String> body) {
-        Long attemptId = Long.parseLong(body.get("attemptId"));
-        Long questionId = Long.parseLong(body.get("questionId"));
-        String selectedAnswer = body.get("selectedAnswer");
-        return ResponseEntity.ok(service.submitAnswer(attemptId, questionId, selectedAnswer));
+    // 🔹 Submit answer
+    @PostMapping("/answer/{attemptId}/{tqId}")
+    public ResponseEntity<PlayerAnswer> submitAnswer(
+            @PathVariable Long attemptId,
+            @PathVariable Long tqId,
+            @RequestParam String selectedAnswer
+    ) {
+        return ResponseEntity.ok(service.submitAnswer(attemptId, tqId, selectedAnswer));
     }
 
-    // Finish attempt
+    // 🔹 Finish attempt
     @PostMapping("/finish/{attemptId}")
     public ResponseEntity<PlayerAttempt> finishAttempt(@PathVariable Long attemptId) {
         return ResponseEntity.ok(service.finishAttempt(attemptId));

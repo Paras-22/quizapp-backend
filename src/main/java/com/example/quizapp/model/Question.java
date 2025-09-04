@@ -3,7 +3,7 @@ package com.example.quizapp.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "question")
+@Table(name = "questions")
 public class Question {
 
     @Id
@@ -17,7 +17,7 @@ public class Question {
     private String optionD;
     private String correctAnswer;
 
-    // ---------- Getters & Setters ----------
+    // --- Getters & Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

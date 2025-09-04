@@ -25,7 +25,8 @@ public class PlayerService {
             PlayerAnswerRepository answerRepo,
             TournamentQuestionRepository tqRepo,
             QuizTournamentRepository tournamentRepo,
-            UserRepository userRepo) {
+            UserRepository userRepo
+    ) {
         this.attemptRepo = attemptRepo;
         this.answerRepo = answerRepo;
         this.tqRepo = tqRepo;
@@ -33,62 +34,61 @@ public class PlayerService {
         this.userRepo = userRepo;
     }
 
-    // Start a new attempt
+    // 🔹 Start attempt
     public PlayerAttempt startAttempt(String username, Long tournamentId) {
-        User user = userRepo.findByUsername(username)
+        User player = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         QuizTournament tournament = tournamentRepo.findById(tournamentId)
                 .orElseThrow(() -> new RuntimeException("Tournament not found"));
 
-        return attemptRepo.findByUserUsernameAndTournamentId(username, tournamentId)
-                .orElseGet(() -> {
-                    PlayerAttempt attempt = new PlayerAttempt();
-                    attempt.setUser(user);
-                    attempt.setTournament(tournament);
-                    attempt.setStartedAt(LocalDateTime.now());
-                    return attemptRepo.save(attempt);
-                });
+        PlayerAttempt attempt = new PlayerAttempt();
+        attempt.setPlayer(player);
+        attempt.setTournament(tournament);
+        attempt.setStartTime(LocalDateTime.now());
+        attempt.setScore(0);
+        attempt.setCompleted(false);
+
+        return attemptRepo.save(attempt);
     }
 
-    // Fetch all questions of a tournament
+    // 🔹 Get tournament questions
     public List<TournamentQuestion> getTournamentQuestions(Long tournamentId) {
-        return tqRepo.findByTournamentIdOrderById(tournamentId);
+        return tqRepo.findByTournamentId(tournamentId);
     }
 
-    // Submit answer
-    public PlayerAnswer submitAnswer(Long attemptId, Long questionId, String selectedAnswer) {
+    // 🔹 Submit answer
+    public PlayerAnswer submitAnswer(Long attemptId, Long tqId, String selectedAnswer) {
         PlayerAttempt attempt = attemptRepo.findById(attemptId)
                 .orElseThrow(() -> new RuntimeException("Attempt not found"));
 
-        TournamentQuestion question = tqRepo.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("Question not found"));
+        TournamentQuestion tq = tqRepo.findById(tqId)
+                .orElseThrow(() -> new RuntimeException("Tournament question not found"));
+
+        boolean correct = tq.getCorrectAnswer().equalsIgnoreCase(selectedAnswer);
 
         PlayerAnswer answer = new PlayerAnswer();
         answer.setAttempt(attempt);
-        answer.setQuestion(question);
+        answer.setQuestion(tq.getQuestion());
         answer.setSelectedAnswer(selectedAnswer);
-
-        boolean correct = question.getCorrectAnswer().equalsIgnoreCase(selectedAnswer);
         answer.setCorrect(correct);
 
         if (correct) {
             attempt.setScore(attempt.getScore() + 1);
+            attemptRepo.save(attempt);
         }
 
-        answerRepo.save(answer);
-        attemptRepo.save(attempt);
-
-        return answer;
+        return answerRepo.save(answer);
     }
 
-    // Finish attempt
+    // 🔹 Finish attempt
     public PlayerAttempt finishAttempt(Long attemptId) {
         PlayerAttempt attempt = attemptRepo.findById(attemptId)
                 .orElseThrow(() -> new RuntimeException("Attempt not found"));
 
         attempt.setCompleted(true);
-        attempt.setFinishedAt(LocalDateTime.now());
+        attempt.setEndTime(LocalDateTime.now());
+
         return attemptRepo.save(attempt);
     }
 }

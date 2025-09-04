@@ -3,7 +3,7 @@ package com.example.quizapp.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "tournament_question")
+@Table(name = "tournament_questions")
 public class TournamentQuestion {
 
     @Id
@@ -20,42 +20,21 @@ public class TournamentQuestion {
 
     private int questionOrder;
 
-    // 🔹 Convenience getter for correctAnswer (not persisted in DB)
     @Transient
     public String getCorrectAnswer() {
         return question != null ? question.getCorrectAnswer() : null;
     }
 
-    // ---------- Getters & Setters ----------
-    public Long getId() {
-        return id;
-    }
+    // --- Getters & Setters ---
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public QuizTournament getTournament() { return tournament; }
+    public void setTournament(QuizTournament tournament) { this.tournament = tournament; }
 
-    public QuizTournament getTournament() {
-        return tournament;
-    }
+    public Question getQuestion() { return question; }
+    public void setQuestion(Question question) { this.question = question; }
 
-    public void setTournament(QuizTournament tournament) {
-        this.tournament = tournament;
-    }
-
-    public Question getQuestion() {
-        return question;
-    }
-
-    public void setQuestion(Question question) {
-        this.question = question;
-    }
-
-    public int getQuestionOrder() {
-        return questionOrder;
-    }
-
-    public void setQuestionOrder(int questionOrder) {
-        this.questionOrder = questionOrder;
-    }
+    public int getQuestionOrder() { return questionOrder; }
+    public void setQuestionOrder(int questionOrder) { this.questionOrder = questionOrder; }
 }
