@@ -72,4 +72,43 @@ public class QuizTournamentService {
     public List<QuizTournament> getAllTournaments() {
         return repo.findAll();
     }
+
+    // 🔹 ADD THESE MISSING METHODS:
+
+    public QuizTournament updateTournament(Long id, QuizTournament updated) {
+        return repo.findById(id)
+                .map(existing -> {
+                    // Update only the fields that should be updatable
+                    existing.setName(updated.getName());
+                    existing.setStartDate(updated.getStartDate());
+                    existing.setEndDate(updated.getEndDate());
+                    // Add other fields you want to be updatable
+                    return repo.save(existing);
+                })
+                .orElseThrow(() -> new RuntimeException("Tournament not found with id: " + id));
+    }
+
+    public void deleteTournament(Long id) {
+        if (repo.existsById(id)) {
+            repo.deleteById(id);
+        } else {
+            throw new RuntimeException("Tournament not found with id: " + id);
+        }
+    }
+
+    public int addLike(Long id) {
+        QuizTournament tournament = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tournament not found"));
+        tournament.setLikes(tournament.getLikes() + 1);
+        repo.save(tournament);
+        return tournament.getLikes();
+    }
+
+    public int removeLike(Long id) {
+        QuizTournament tournament = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tournament not found"));
+        tournament.setLikes(Math.max(0, tournament.getLikes() - 1));
+        repo.save(tournament);
+        return tournament.getLikes();
+    }
 }

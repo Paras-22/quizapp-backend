@@ -14,15 +14,14 @@ public class PlayerAnswer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "attempt_id")
     private PlayerAttempt attempt;
 
-
+    // CHANGE THIS: Store the actual Question instead of TournamentQuestion
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "tournament_question_id")
-    private TournamentQuestion question;
+    @JoinColumn(name = "question_id")
+    private Question question;  // ← Changed from TournamentQuestion to Question
 
     @Column(nullable = false)
     private String selectedAnswer;
@@ -33,12 +32,12 @@ public class PlayerAnswer {
     @Column(nullable = false)
     private LocalDateTime answeredAt = LocalDateTime.now();
 
-
+    // Getters and setters
     public Long getId() { return id; }
     public PlayerAttempt getAttempt() { return attempt; }
     public void setAttempt(PlayerAttempt attempt) { this.attempt = attempt; }
-    public TournamentQuestion getQuestion() { return question; }
-    public void setQuestion(TournamentQuestion question) { this.question = question; }
+    public Question getQuestion() { return question; }  // ← Return Question
+    public void setQuestion(Question question) { this.question = question; }  // ← Accept Question
     public String getSelectedAnswer() { return selectedAnswer; }
     public void setSelectedAnswer(String selectedAnswer) { this.selectedAnswer = selectedAnswer; }
     public boolean isCorrect() { return correct; }
