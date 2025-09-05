@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PlayerAttemptRepository extends JpaRepository<PlayerAttempt, Long> {
-    Optional<PlayerAttempt> findByUserUsernameAndTournamentId(String username, Long tournamentId);
-    List<PlayerAttempt> findByUserUsername(String username);
+    // FIXED: Changed from findByUserUsername to findByPlayerUsername
+    Optional<PlayerAttempt> findByPlayerUsernameAndTournamentId(String username, Long tournamentId);
+
+    // FIXED: Changed from findByUserUsername to findByPlayerUsername
+    List<PlayerAttempt> findByPlayerUsername(String username);
 }

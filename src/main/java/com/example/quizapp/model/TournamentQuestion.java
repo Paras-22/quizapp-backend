@@ -20,12 +20,7 @@ public class TournamentQuestion {
 
     private int questionOrder;
 
-    @Transient
-    public String getCorrectAnswer() {
-        return question != null ? question.getCorrectAnswer() : null;
-    }
-
-    // --- Getters & Setters ---
+    // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

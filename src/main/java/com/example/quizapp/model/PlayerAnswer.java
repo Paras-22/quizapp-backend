@@ -18,10 +18,10 @@ public class PlayerAnswer {
     @JoinColumn(name = "attempt_id")
     private PlayerAttempt attempt;
 
-    // CHANGE THIS: Store the actual Question instead of TournamentQuestion
+    // FIXED: Changed from TournamentQuestion to Question
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "question_id")
-    private Question question;  // ← Changed from TournamentQuestion to Question
+    private Question question;
 
     @Column(nullable = false)
     private String selectedAnswer;
@@ -36,8 +36,8 @@ public class PlayerAnswer {
     public Long getId() { return id; }
     public PlayerAttempt getAttempt() { return attempt; }
     public void setAttempt(PlayerAttempt attempt) { this.attempt = attempt; }
-    public Question getQuestion() { return question; }  // ← Return Question
-    public void setQuestion(Question question) { this.question = question; }  // ← Accept Question
+    public Question getQuestion() { return question; }  // Returns Question
+    public void setQuestion(Question question) { this.question = question; }  // Accepts Question
     public String getSelectedAnswer() { return selectedAnswer; }
     public void setSelectedAnswer(String selectedAnswer) { this.selectedAnswer = selectedAnswer; }
     public boolean isCorrect() { return correct; }

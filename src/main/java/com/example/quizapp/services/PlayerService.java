@@ -2,8 +2,8 @@ package com.example.quizapp.services;
 
 import com.example.quizapp.db.PlayerAnswerRepository;
 import com.example.quizapp.db.PlayerAttemptRepository;
-import com.example.quizapp.db.QuizTournamentRepository;
 import com.example.quizapp.db.TournamentQuestionRepository;
+import com.example.quizapp.db.QuizTournamentRepository;
 import com.example.quizapp.db.UserRepository;
 import com.example.quizapp.model.*;
 import org.springframework.stereotype.Service;
@@ -57,7 +57,7 @@ public class PlayerService {
         return tqRepo.findByTournamentId(tournamentId);
     }
 
-    // 🔹 Submit answer
+    // 🔹 Submit answer - FIXED THIS METHOD
     public PlayerAnswer submitAnswer(Long attemptId, Long tqId, String selectedAnswer) {
         PlayerAttempt attempt = attemptRepo.findById(attemptId)
                 .orElseThrow(() -> new RuntimeException("Attempt not found"));
@@ -65,11 +65,17 @@ public class PlayerService {
         TournamentQuestion tq = tqRepo.findById(tqId)
                 .orElseThrow(() -> new RuntimeException("Tournament question not found"));
 
-        boolean correct = tq.getCorrectAnswer().equalsIgnoreCase(selectedAnswer);
+        // FIX: Get the correct answer from the Question object, not TournamentQuestion
+        Question question = tq.getQuestion();
+        if (question == null) {
+            throw new RuntimeException("Question not found for tournament question");
+        }
+
+        boolean correct = question.getCorrectAnswer().equalsIgnoreCase(selectedAnswer);
 
         PlayerAnswer answer = new PlayerAnswer();
         answer.setAttempt(attempt);
-        answer.setQuestion(tq.getQuestion());
+        answer.setQuestion(question);  // Set the Question object directly
         answer.setSelectedAnswer(selectedAnswer);
         answer.setCorrect(correct);
 
