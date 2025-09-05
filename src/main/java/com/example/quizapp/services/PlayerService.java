@@ -57,15 +57,19 @@ public class PlayerService {
         return tqRepo.findByTournamentId(tournamentId);
     }
 
-    // 🔹 Submit answer - FIXED THIS METHOD
+    // 🔹 Submit answer - FIXED with completion check
     public PlayerAnswer submitAnswer(Long attemptId, Long tqId, String selectedAnswer) {
         PlayerAttempt attempt = attemptRepo.findById(attemptId)
                 .orElseThrow(() -> new RuntimeException("Attempt not found"));
 
+        // FIX: Check if attempt is already completed
+        if (attempt.isCompleted()) {
+            throw new RuntimeException("This quiz attempt has already been completed");
+        }
+
         TournamentQuestion tq = tqRepo.findById(tqId)
                 .orElseThrow(() -> new RuntimeException("Tournament question not found"));
 
-        // FIX: Get the correct answer from the Question object, not TournamentQuestion
         Question question = tq.getQuestion();
         if (question == null) {
             throw new RuntimeException("Question not found for tournament question");
@@ -75,7 +79,7 @@ public class PlayerService {
 
         PlayerAnswer answer = new PlayerAnswer();
         answer.setAttempt(attempt);
-        answer.setQuestion(question);  // Set the Question object directly
+        answer.setQuestion(question);
         answer.setSelectedAnswer(selectedAnswer);
         answer.setCorrect(correct);
 
