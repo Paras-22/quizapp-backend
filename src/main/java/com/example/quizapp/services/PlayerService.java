@@ -57,12 +57,11 @@ public class PlayerService {
         return tqRepo.findByTournamentId(tournamentId);
     }
 
-    // 🔹 Submit answer - FIXED with completion check
+    // 🔹 Submit answer - FIXED mapping option letter to value
     public PlayerAnswer submitAnswer(Long attemptId, Long tqId, String selectedAnswer) {
         PlayerAttempt attempt = attemptRepo.findById(attemptId)
                 .orElseThrow(() -> new RuntimeException("Attempt not found"));
 
-        // FIX: Check if attempt is already completed
         if (attempt.isCompleted()) {
             throw new RuntimeException("This quiz attempt has already been completed");
         }
@@ -75,13 +74,25 @@ public class PlayerService {
             throw new RuntimeException("Question not found for tournament question");
         }
 
-        boolean correct = question.getCorrectAnswer().equalsIgnoreCase(selectedAnswer);
+        // ✅ Map option letter (A/B/C/D) to actual value
+        String actualAnswer = null;
+        switch (selectedAnswer.toUpperCase()) {
+            case "A" -> actualAnswer = question.getOptionA();
+            case "B" -> actualAnswer = question.getOptionB();
+            case "C" -> actualAnswer = question.getOptionC();
+            case "D" -> actualAnswer = question.getOptionD();
+            default -> throw new RuntimeException("Invalid option: " + selectedAnswer);
+        }
+
+        boolean correct = actualAnswer != null &&
+                actualAnswer.equalsIgnoreCase(question.getCorrectAnswer());
 
         PlayerAnswer answer = new PlayerAnswer();
         answer.setAttempt(attempt);
         answer.setQuestion(question);
-        answer.setSelectedAnswer(selectedAnswer);
+        answer.setSelectedAnswer(selectedAnswer); // keep the letter the player chose
         answer.setCorrect(correct);
+        answer.setAnsweredAt(LocalDateTime.now());
 
         if (correct) {
             attempt.setScore(attempt.getScore() + 1);
