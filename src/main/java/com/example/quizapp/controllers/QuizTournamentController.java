@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/tournaments")
@@ -19,17 +20,20 @@ public class QuizTournamentController {
     private final com.example.quizapp.db.QuizTournamentRepository repo;
     private final com.example.quizapp.db.TournamentQuestionRepository tqRepo;
     private final com.example.quizapp.db.QuestionRepository questionRepo;
+    private final com.example.quizapp.db.PlayerAttemptRepository playerAttemptRepo;
 
     public QuizTournamentController(
             QuizTournamentService service,
             com.example.quizapp.db.QuizTournamentRepository repo,
             com.example.quizapp.db.TournamentQuestionRepository tqRepo,
-            com.example.quizapp.db.QuestionRepository questionRepo
+            com.example.quizapp.db.QuestionRepository questionRepo,
+            com.example.quizapp.db.PlayerAttemptRepository playerAttemptRepo
     ) {
         this.service = service;
         this.repo = repo;
         this.tqRepo = tqRepo;
         this.questionRepo = questionRepo;
+        this.playerAttemptRepo = playerAttemptRepo;
     }
 
     // Create tournament (auto-links 10 random questions)
@@ -118,5 +122,54 @@ public class QuizTournamentController {
         }
 
         return ResponseEntity.ok("Manually linked " + linkedCount + " questions to tournament " + tournamentId);
+    }
+
+    // 🎯 NEW: Tournament scores endpoint
+    @GetMapping("/{tournamentId}/scores")
+    public ResponseEntity<Map<String, Object>> getTournamentScores(@PathVariable Long tournamentId) {
+        Optional<QuizTournament> tournamentOpt = repo.findById(tournamentId);
+        if (!tournamentOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        QuizTournament tournament = tournamentOpt.get();
+
+        // Get completed attempts for this tournament
+        List<com.example.quizapp.model.PlayerAttempt> attempts =
+                playerAttemptRepo.findByTournamentIdAndCompletedTrue(tournamentId);
+
+        // Calculate statistics
+        Long totalPlayers = playerAttemptRepo.countDistinctPlayersByTournamentId(tournamentId);
+        Double averageScore = playerAttemptRepo.findAverageScoreByTournamentId(tournamentId);
+
+        // Prepare score data
+        List<Map<String, Object>> scores = attempts.stream()
+                .sorted((a, b) -> Integer.compare(b.getScore(), a.getScore())) // Descending by score
+                .map(attempt -> {
+                    Map<String, Object> scoreInfo = new HashMap<>();
+                    scoreInfo.put("playerId", attempt.getPlayer().getId());
+                    scoreInfo.put("playerName", attempt.getPlayer().getUsername());
+                    scoreInfo.put("playerFirstName", attempt.getPlayer().getFirstName());
+                    scoreInfo.put("playerLastName", attempt.getPlayer().getLastName());
+                    scoreInfo.put("score", attempt.getScore());
+                    scoreInfo.put("completedDate", attempt.getEndTime());
+                    scoreInfo.put("totalQuestions", 10); // Assuming 10 questions per tournament
+                    scoreInfo.put("percentage", (attempt.getScore() * 10)); // Score out of 10 -> percentage
+                    scoreInfo.put("passed", attempt.getScore() >= tournament.getMinPassingScore());
+                    return scoreInfo;
+                })
+                .collect(Collectors.toList());
+
+        // Build response
+        Map<String, Object> response = new HashMap<>();
+        response.put("tournamentId", tournament.getId());
+        response.put("tournamentName", tournament.getName());
+        response.put("totalPlayers", totalPlayers != null ? totalPlayers : 0);
+        response.put("averageScore", averageScore != null ? Math.round(averageScore * 10.0) / 10.0 : 0);
+        response.put("minPassingScore", tournament.getMinPassingScore());
+        response.put("likes", tournament.getLikes());
+        response.put("scores", scores);
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -13,7 +13,7 @@ public class PlayerAttempt {
 
     @ManyToOne
     @JoinColumn(name = "player_id", nullable = false)
-    private User player;   // 👈 The user (player) attempting the quiz
+    private User player;
 
     @ManyToOne
     @JoinColumn(name = "tournament_id", nullable = false)
@@ -24,7 +24,7 @@ public class PlayerAttempt {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
-    // --- Getters & Setters ---
+    // Ensure getters and setters exist for all fields
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
