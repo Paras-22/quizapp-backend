@@ -81,7 +81,10 @@ public class QuizTournamentController {
 
         QuizTournament tournament = tournamentOpt.get();
 
-        // Get completed attempts for this tournament
+        // Get total questions for this tournament
+        int totalQuestions = tqRepo.findByTournamentId(tournamentId).size();
+
+        // Get completed attempts
         List<com.example.quizapp.model.PlayerAttempt> attempts =
                 playerAttemptRepo.findByTournamentIdAndCompletedTrue(tournamentId);
 
@@ -93,16 +96,19 @@ public class QuizTournamentController {
         List<Map<String, Object>> scores = attempts.stream()
                 .sorted((a, b) -> Integer.compare(b.getScore(), a.getScore())) // sort DESC
                 .map(attempt -> {
+                    int playerScore = attempt.getScore();
                     Map<String, Object> scoreInfo = new HashMap<>();
                     scoreInfo.put("playerId", attempt.getPlayer().getId());
                     scoreInfo.put("playerName", attempt.getPlayer().getUsername());
                     scoreInfo.put("playerFirstName", attempt.getPlayer().getFirstName());
                     scoreInfo.put("playerLastName", attempt.getPlayer().getLastName());
-                    scoreInfo.put("score", attempt.getScore());
+                    scoreInfo.put("score", playerScore + "/" + totalQuestions); // ✅ formatted score
+                    scoreInfo.put("rawScore", playerScore);                     // keep raw integer
                     scoreInfo.put("completedDate", attempt.getEndTime());
-                    scoreInfo.put("totalQuestions", 10); // assuming 10 questions per tournament
-                    scoreInfo.put("percentage", (attempt.getScore() * 10)); // score out of 10 -> percentage
-                    scoreInfo.put("passed", attempt.getScore() >= tournament.getMinPassingScore());
+                    scoreInfo.put("totalQuestions", totalQuestions);
+                    int percentage = totalQuestions > 0 ? (playerScore * 100) / totalQuestions : 0;
+                    scoreInfo.put("percentage", percentage);
+                    scoreInfo.put("passed", percentage >= tournament.getMinPassingScore());
                     return scoreInfo;
                 })
                 .collect(Collectors.toList());
