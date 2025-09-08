@@ -1,6 +1,9 @@
 package com.example.quizapp.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,8 +18,13 @@ public class PlayerAttempt {
     @JoinColumn(name = "player_id", nullable = false)
     private User player;
 
+//    @ManyToOne
+//    @JoinColumn(name = "tournament_id", nullable = false)
+//    private QuizTournament tournament;
+
     @ManyToOne
     @JoinColumn(name = "tournament_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private QuizTournament tournament;
 
     private int score;
