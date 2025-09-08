@@ -14,6 +14,7 @@ public interface PlayerAttemptRepository extends JpaRepository<PlayerAttempt, Lo
 
     // ADD THIS METHOD:
     List<PlayerAttempt> findByTournamentIdAndCompletedTrue(Long tournamentId);
+    List<PlayerAttempt> findByTournamentId(Long tournamentId);
 
     // ADD THIS METHOD FOR STATISTICS:
     @Query("SELECT COUNT(DISTINCT pa.player) FROM PlayerAttempt pa WHERE pa.tournament.id = :tournamentId AND pa.completed = true")
