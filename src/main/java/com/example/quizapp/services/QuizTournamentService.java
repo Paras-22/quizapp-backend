@@ -1,10 +1,17 @@
 package com.example.quizapp.services;
 
-import com.example.quizapp.db.*;
+import com.example.quizapp.db.PlayerAttemptRepository;
+import com.example.quizapp.db.QuestionRepository;
+import com.example.quizapp.db.QuizTournamentRepository;
+import com.example.quizapp.db.TournamentQuestionRepository;
+import com.example.quizapp.dto.ScoreboardResponse;
+import com.example.quizapp.dto.ScoreboardResponse.PlayerScore;
 import com.example.quizapp.model.PlayerAttempt;
-import com.example.quizapp.model.Question;
 import com.example.quizapp.model.QuizTournament;
 import com.example.quizapp.model.TournamentQuestion;
+import com.example.quizapp.model.Question;
+import com.example.quizapp.model.PlayerAnswer;
+import com.example.quizapp.db.PlayerAnswerRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -12,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class QuizTournamentService {
@@ -21,7 +29,6 @@ public class QuizTournamentService {
     private final TournamentQuestionRepository tqRepo;
     private final PlayerAttemptRepository playerAttemptRepo;
     private final PlayerAnswerRepository answerRepo;
-
 
     public QuizTournamentService(
             QuizTournamentRepository repo,
@@ -155,5 +162,35 @@ public class QuizTournamentService {
         tournament.setLikes(Math.max(0, tournament.getLikes() - 1));
         repo.save(tournament);
         return tournament.getLikes();
+    }
+
+    public ScoreboardResponse getScoreboard(Long tournamentId) {
+        QuizTournament tournament = repo.findById(tournamentId)
+                .orElseThrow(() -> new RuntimeException("Tournament not found"));
+
+        List<PlayerAttempt> attempts = playerAttemptRepo
+                .findByTournamentIdAndCompletedTrueOrderByScoreDesc(tournamentId);
+
+        List<PlayerScore> scores = attempts.stream()
+                .map(a -> new PlayerScore(
+                        a.getPlayer().getUsername(),
+                        a.getScore(),
+                        a.getCompletedAt()
+                ))
+                .toList();
+
+        long totalPlayers = playerAttemptRepo.countDistinctPlayersByTournamentId(tournamentId);
+        double avgScore = Optional.ofNullable(
+                playerAttemptRepo.findAverageScoreByTournamentId(tournamentId)
+        ).orElse(0.0);
+
+        ScoreboardResponse response = new ScoreboardResponse();
+        response.setTournamentName(tournament.getName());
+        response.setLikes(tournament.getLikes());
+        response.setTotalPlayers(totalPlayers);
+        response.setAverageScore(avgScore);
+        response.setScores(scores);
+
+        return response;
     }
 }

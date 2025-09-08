@@ -1,5 +1,6 @@
 package com.example.quizapp.controllers;
 
+import com.example.quizapp.dto.ScoreboardResponse;
 import com.example.quizapp.model.QuizTournament;
 import com.example.quizapp.model.TournamentQuestion;
 import com.example.quizapp.services.QuizTournamentService;
@@ -70,6 +71,11 @@ public class QuizTournamentController {
         return ResponseEntity.ok("Tournament unliked. Total likes: " + likes);
     }
 
+    @GetMapping("/{id}/scores")
+    public ResponseEntity<ScoreboardResponse> getScores(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getScoreboard(id));
+    }
+
     // 🔍 Debug endpoint to check tournament questions
     @GetMapping("/debug/{tournamentId}")
     public ResponseEntity<Map<String, Object>> debugTournament(@PathVariable Long tournamentId) {
@@ -124,7 +130,7 @@ public class QuizTournamentController {
         return ResponseEntity.ok("Manually linked " + linkedCount + " questions to tournament " + tournamentId);
     }
 
-    // 🎯 NEW: Tournament scores endpoint
+
     @GetMapping("/{tournamentId}/scores")
     public ResponseEntity<Map<String, Object>> getTournamentScores(@PathVariable Long tournamentId) {
         Optional<QuizTournament> tournamentOpt = repo.findById(tournamentId);

@@ -27,6 +27,9 @@ public class PlayerAttempt {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private QuizTournament tournament;
 
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     private int score;
     private boolean completed;
     private LocalDateTime startTime;
@@ -53,4 +56,12 @@ public class PlayerAttempt {
 
     public LocalDateTime getEndTime() { return endTime; }
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
+    }
 }
