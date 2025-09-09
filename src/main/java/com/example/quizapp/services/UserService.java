@@ -46,14 +46,14 @@ public class UserService {
     // Check if a user is admin
     public boolean isAdmin(String username) {
         return repo.findByUsername(username)
-                .map(u -> u.getRole() == Role.ADMIN)
+                .map(u -> "ADMIN".equalsIgnoreCase(u.getRole()))
                 .orElse(false);
     }
 
     // Check if a user is player
     public boolean isPlayer(String username) {
         return repo.findByUsername(username)
-                .map(u -> u.getRole() == Role.PLAYER)
+                .map(u -> "PLAYER".equalsIgnoreCase(u.getRole()))
                 .orElse(false);
     }
 }
