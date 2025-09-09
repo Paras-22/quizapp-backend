@@ -61,6 +61,6 @@ public class User {
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
 
-    public Role getRole() { return role; }
+    public String getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
 }

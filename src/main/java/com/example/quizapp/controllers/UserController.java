@@ -1,60 +1,44 @@
 package com.example.quizapp.controllers;
 
-import com.example.quizapp.model.Role;
+import com.example.quizapp.db.UserRepository;
+import com.example.quizapp.dto.AuthResponse;
 import com.example.quizapp.model.User;
-import com.example.quizapp.services.UserService;
-import jakarta.validation.Valid;
+import com.example.quizapp.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private final UserService service;
+    private final UserRepository userRepo;
+    private final JwtUtil jwtUtil;
 
-    public UserController(UserService service) {
-        this.service = service;
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody User user) {
-        return ResponseEntity.ok(service.register(user));
+    public UserController(UserRepository userRepo, JwtUtil jwtUtil) {
+        this.userRepo = userRepo;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
-        String username = loginData.get("username");
-        String password = loginData.get("password");
-        Optional<User> user = service.login(username, password);
-        if (user.isPresent()) {
-            return ResponseEntity.ok("Login successful. Role: " + user.get().getRole());
+    public ResponseEntity<?> login(@RequestBody User loginRequest) {
+        User user = userRepo.findByUsername(loginRequest.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.getPassword().equals(loginRequest.getPassword())) {
+            return ResponseEntity.badRequest().body("Invalid credentials");
         }
-        return ResponseEntity.badRequest().body("Invalid username or password");
+
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
+
+        return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), user.getRole()));
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<User> updateProfile(@PathVariable Long id, @Valid @RequestBody User updated) {
-        return ResponseEntity.ok(service.updateProfile(id, updated));
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-        return ResponseEntity.ok(service.resetPassword(email));
-    }
-
-    // 🔹 Role check endpoints (for testing)
-    @GetMapping("/is-admin/{username}")
-    public ResponseEntity<Boolean> checkAdmin(@PathVariable String username) {
-        return ResponseEntity.ok(service.isAdmin(username));
-    }
-
-    @GetMapping("/is-player/{username}")
-    public ResponseEntity<Boolean> checkPlayer(@PathVariable String username) {
-        return ResponseEntity.ok(service.isPlayer(username));
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody User newUser) {
+        if (userRepo.findByUsername(newUser.getUsername()).isPresent()) {
+            return ResponseEntity.badRequest().body("Username already taken");
+        }
+        userRepo.save(newUser);
+        return ResponseEntity.ok("User registered successfully");
     }
 }
