@@ -33,8 +33,8 @@ public class User {
     private String phone;
     private String address;
 
-    @Enumerated(EnumType.STRING)
-    private Role role; // now enum
+    @Enumerated(EnumType.STRING)  // stores enum as text in DB ("ADMIN", "PLAYER")
+    private Role role;
 
     // --- getters and setters ---
     public Long getId() { return id; }
@@ -61,6 +61,7 @@ public class User {
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
 
-    public String getRole() { return role; }
+
+    public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
 }
