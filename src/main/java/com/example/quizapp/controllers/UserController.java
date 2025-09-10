@@ -28,9 +28,12 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
+        // ✅ Convert Role enum to String for token & response
+        String role = user.getRole().name();
 
-        return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), user.getRole()));
+        String token = jwtUtil.generateToken(user.getUsername(), role);
+
+        return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), role));
     }
 
     @PostMapping("/register")
