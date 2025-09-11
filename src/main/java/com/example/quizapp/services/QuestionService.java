@@ -14,12 +14,12 @@ public class QuestionService {
     @Autowired
     private QuestionRepository questionRepository;
 
-    // CREATE
+
     public Question addQuestion(Question question) {
         return questionRepository.save(question);
     }
 
-    // READ ALL
+
     public List<Question> getAllQuestions() {
         return questionRepository.findAll();
     }
