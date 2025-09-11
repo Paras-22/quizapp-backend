@@ -36,15 +36,13 @@ public class PlayerService {
         this.userRepo = userRepo;
     }
 
-    // Helper method to get current authenticated username
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getName();
     }
 
-    // 🔹 Start attempt
     public PlayerAttempt startAttempt(Long tournamentId) {
-        String username = getCurrentUsername(); // Get current authenticated user's username
+        String username = getCurrentUsername();
 
         User player = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -52,7 +50,6 @@ public class PlayerService {
         QuizTournament tournament = tournamentRepo.findById(tournamentId)
                 .orElseThrow(() -> new RuntimeException("Tournament not found"));
 
-        // Check if player already has an attempt for this tournament
         if (attemptRepo.findByPlayerUsernameAndTournamentId(username, tournamentId).isPresent()) {
             throw new RuntimeException("Player has already started this tournament");
         }
@@ -67,12 +64,10 @@ public class PlayerService {
         return attemptRepo.save(attempt);
     }
 
-    // 🔹 Get tournament questions
     public List<TournamentQuestion> getTournamentQuestions(Long tournamentId) {
         return tqRepo.findByTournamentId(tournamentId);
     }
 
-    // 🔹 Submit answer - FIXED mapping option letter to value
     public PlayerAnswer submitAnswer(Long attemptId, Long tqId, String selectedAnswer) {
         PlayerAttempt attempt = attemptRepo.findById(attemptId)
                 .orElseThrow(() -> new RuntimeException("Attempt not found"));
@@ -89,7 +84,6 @@ public class PlayerService {
             throw new RuntimeException("Question not found for tournament question");
         }
 
-        // ✅ Map option letter (A/B/C/D) to actual value
         String actualAnswer = null;
         switch (selectedAnswer.toUpperCase()) {
             case "A" -> actualAnswer = question.getOptionA();
@@ -105,7 +99,7 @@ public class PlayerService {
         PlayerAnswer answer = new PlayerAnswer();
         answer.setAttempt(attempt);
         answer.setQuestion(question);
-        answer.setSelectedAnswer(selectedAnswer); // keep the letter the player chose
+        answer.setSelectedAnswer(selectedAnswer);
         answer.setCorrect(correct);
         answer.setAnsweredAt(LocalDateTime.now());
 
@@ -117,7 +111,6 @@ public class PlayerService {
         return answerRepo.save(answer);
     }
 
-    // 🔹 Finish attempt
     public PlayerAttempt finishAttempt(Long attemptId) {
         PlayerAttempt attempt = attemptRepo.findById(attemptId)
                 .orElseThrow(() -> new RuntimeException("Attempt not found"));
@@ -128,12 +121,11 @@ public class PlayerService {
 
         attempt.setCompleted(true);
         attempt.setEndTime(LocalDateTime.now());
-        attempt.setCompletedAt(LocalDateTime.now()); // Set completedAt as well
+        attempt.setCompletedAt(LocalDateTime.now());
 
         return attemptRepo.save(attempt);
     }
 
-    // Additional helper methods you might need
     public List<PlayerAttempt> getPlayerAttempts(String username) {
         return attemptRepo.findByPlayerUsername(username);
     }

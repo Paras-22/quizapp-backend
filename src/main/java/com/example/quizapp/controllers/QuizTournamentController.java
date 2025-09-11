@@ -22,26 +22,35 @@ public class QuizTournamentController {
 
     private String getRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        String authority = auth.getAuthorities().iterator().next().getAuthority();
+
+        System.out.println("DEBUG - Full authority: " + authority);
+        System.out.println("DEBUG - Username: " + auth.getName());
+
+        if (authority.startsWith("ROLE_")) {
+            return authority.substring(5);
+        }
+        return authority;
     }
 
-    // ADMIN ONLY - Create tournament
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody QuizTournament quiz) {
         if (!"ADMIN".equals(getRole())) {
             return ResponseEntity.status(403).body("Access denied: Admins only");
         }
-        QuizTournament created = service.createTournament(quiz);
-        return ResponseEntity.ok(created);
+        try {
+            QuizTournament created = service.createTournament(quiz);
+            return ResponseEntity.ok(created);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error creating tournament: " + e.getMessage());
+        }
     }
 
-    // BOTH - Get all tournaments
     @GetMapping
     public ResponseEntity<List<QuizTournament>> getAll() {
         return ResponseEntity.ok(service.getAllTournaments());
     }
 
-    // ADMIN ONLY - Update tournament
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody QuizTournament updated) {
         if (!"ADMIN".equals(getRole())) {
@@ -55,7 +64,6 @@ public class QuizTournamentController {
         }
     }
 
-    // ADMIN ONLY - Delete tournament
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         if (!"ADMIN".equals(getRole())) {
@@ -69,7 +77,6 @@ public class QuizTournamentController {
         }
     }
 
-    // PLAYER ONLY - Like tournament
     @PostMapping("/like/{id}")
     public ResponseEntity<?> like(@PathVariable Long id) {
         if (!"PLAYER".equals(getRole())) {
@@ -83,7 +90,6 @@ public class QuizTournamentController {
         }
     }
 
-    // PLAYER ONLY - Unlike tournament
     @PostMapping("/unlike/{id}")
     public ResponseEntity<?> unlike(@PathVariable Long id) {
         if (!"PLAYER".equals(getRole())) {
@@ -97,7 +103,6 @@ public class QuizTournamentController {
         }
     }
 
-    // BOTH - View scores/scoreboard
     @GetMapping("/{id}/scores")
     public ResponseEntity<?> getScores(@PathVariable Long id) {
         try {

@@ -19,10 +19,17 @@ public class QuestionController {
 
     private String getRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        String authority = auth.getAuthorities().iterator().next().getAuthority();
+
+        System.out.println("DEBUG - Full authority: " + authority);
+        System.out.println("DEBUG - Username: " + auth.getName());
+
+        if (authority.startsWith("ROLE_")) {
+            return authority.substring(5);
+        }
+        return authority;
     }
 
-    // CREATE - ADMIN ONLY
     @PostMapping
     public ResponseEntity<?> addQuestion(@RequestBody Question question) {
         if (!"ADMIN".equals(getRole())) {
@@ -32,7 +39,6 @@ public class QuestionController {
         return ResponseEntity.ok(savedQuestion);
     }
 
-    // READ ALL - ADMIN ONLY
     @GetMapping
     public ResponseEntity<?> getAllQuestions() {
         if (!"ADMIN".equals(getRole())) {
@@ -42,7 +48,6 @@ public class QuestionController {
         return ResponseEntity.ok(questions);
     }
 
-    // READ BY ID - ADMIN ONLY
     @GetMapping("/{id}")
     public ResponseEntity<?> getQuestionById(@PathVariable Long id) {
         if (!"ADMIN".equals(getRole())) {
@@ -53,7 +58,6 @@ public class QuestionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // UPDATE - ADMIN ONLY
     @PutMapping("/{id}")
     public ResponseEntity<?> updateQuestion(@PathVariable Long id, @RequestBody Question question) {
         if (!"ADMIN".equals(getRole())) {
@@ -67,7 +71,6 @@ public class QuestionController {
         }
     }
 
-    // DELETE - ADMIN ONLY
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteQuestion(@PathVariable Long id) {
         if (!"ADMIN".equals(getRole())) {

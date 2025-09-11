@@ -28,10 +28,11 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid credentials");
         }
 
-
         String role = user.getRole().name();
+        System.out.println("DEBUG - User role from DB: " + role);
 
         String token = jwtUtil.generateToken(user.getUsername(), role);
+        System.out.println("DEBUG - Generated token for user: " + user.getUsername() + " with role: " + role);
 
         return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), role));
     }
@@ -41,7 +42,11 @@ public class UserController {
         if (userRepo.findByUsername(newUser.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username already taken");
         }
-        userRepo.save(newUser);
+
+        System.out.println("DEBUG - Registering user with role: " + newUser.getRole());
+        User savedUser = userRepo.save(newUser);
+        System.out.println("DEBUG - Saved user with role: " + savedUser.getRole());
+
         return ResponseEntity.ok("User registered successfully");
     }
 }

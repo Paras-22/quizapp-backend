@@ -24,7 +24,15 @@ public class PlayerController {
 
     private String getRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        String authority = auth.getAuthorities().iterator().next().getAuthority();
+
+        System.out.println("DEBUG - Full authority: " + authority);
+        System.out.println("DEBUG - Username: " + auth.getName());
+
+        if (authority.startsWith("ROLE_")) {
+            return authority.substring(5);
+        }
+        return authority;
     }
 
     @PostMapping("/start/{tournamentId}")
@@ -88,18 +96,5 @@ public class PlayerController {
         String username = auth.getName();
         List<PlayerAttempt> attempts = service.getPlayerAttempts(username);
         return ResponseEntity.ok(attempts);
-    }
-
-    @GetMapping("/attempt/{attemptId}")
-    public ResponseEntity<?> getAttempt(@PathVariable Long attemptId) {
-        if (!"PLAYER".equals(getRole())) {
-            return ResponseEntity.status(403).body("Access denied: Players only");
-        }
-        try {
-            PlayerAttempt attempt = service.getAttemptById(attemptId);
-            return ResponseEntity.ok(attempt);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
     }
 }
