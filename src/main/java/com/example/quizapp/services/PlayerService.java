@@ -6,6 +6,8 @@ import com.example.quizapp.db.TournamentQuestionRepository;
 import com.example.quizapp.db.QuizTournamentRepository;
 import com.example.quizapp.db.UserRepository;
 import com.example.quizapp.model.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -34,13 +36,26 @@ public class PlayerService {
         this.userRepo = userRepo;
     }
 
+    // Helper method to get current authenticated username
+    private String getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
+    }
+
     // 🔹 Start attempt
     public PlayerAttempt startAttempt(Long tournamentId) {
+        String username = getCurrentUsername(); // Get current authenticated user's username
+
         User player = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         QuizTournament tournament = tournamentRepo.findById(tournamentId)
                 .orElseThrow(() -> new RuntimeException("Tournament not found"));
+
+        // Check if player already has an attempt for this tournament
+        if (attemptRepo.findByPlayerUsernameAndTournamentId(username, tournamentId).isPresent()) {
+            throw new RuntimeException("Player has already started this tournament");
+        }
 
         PlayerAttempt attempt = new PlayerAttempt();
         attempt.setPlayer(player);
@@ -107,9 +122,24 @@ public class PlayerService {
         PlayerAttempt attempt = attemptRepo.findById(attemptId)
                 .orElseThrow(() -> new RuntimeException("Attempt not found"));
 
+        if (attempt.isCompleted()) {
+            throw new RuntimeException("Attempt already completed");
+        }
+
         attempt.setCompleted(true);
         attempt.setEndTime(LocalDateTime.now());
+        attempt.setCompletedAt(LocalDateTime.now()); // Set completedAt as well
 
         return attemptRepo.save(attempt);
+    }
+
+    // Additional helper methods you might need
+    public List<PlayerAttempt> getPlayerAttempts(String username) {
+        return attemptRepo.findByPlayerUsername(username);
+    }
+
+    public PlayerAttempt getAttemptById(Long attemptId) {
+        return attemptRepo.findById(attemptId)
+                .orElseThrow(() -> new RuntimeException("Attempt not found"));
     }
 }
