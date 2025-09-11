@@ -28,7 +28,7 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid credentials");
         }
 
-        // ✅ Convert Role enum to String for token & response
+
         String role = user.getRole().name();
 
         String token = jwtUtil.generateToken(user.getUsername(), role);

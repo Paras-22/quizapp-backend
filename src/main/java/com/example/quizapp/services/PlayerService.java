@@ -35,7 +35,7 @@ public class PlayerService {
     }
 
     // 🔹 Start attempt
-    public PlayerAttempt startAttempt(String username, Long tournamentId) {
+    public PlayerAttempt startAttempt(Long tournamentId) {
         User player = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
