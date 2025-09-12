@@ -24,12 +24,12 @@ public class QuestionService {
         return questionRepository.findAll();
     }
 
-    // READ BY ID
+
     public Optional<Question> getQuestionById(Long id) {
         return questionRepository.findById(id);
     }
 
-    // UPDATE
+
     public Question updateQuestion(Long id, Question updatedQuestion) {
         return questionRepository.findById(id).map(existing -> {
             existing.setQuestionText(updatedQuestion.getQuestionText());
@@ -42,7 +42,7 @@ public class QuestionService {
         }).orElse(null);
     }
 
-    // DELETE
+
     public void deleteQuestion(Long id) {
         questionRepository.deleteById(id);
     }

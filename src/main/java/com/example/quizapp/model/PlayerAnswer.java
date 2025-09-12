@@ -32,7 +32,7 @@ public class PlayerAnswer {
     @Column(nullable = false)
     private LocalDateTime answeredAt = LocalDateTime.now();
 
-    // Getters and setters
+
     public Long getId() { return id; }
     public PlayerAttempt getAttempt() { return attempt; }
     public void setAttempt(PlayerAttempt attempt) { this.attempt = attempt; }
