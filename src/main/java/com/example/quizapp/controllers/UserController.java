@@ -2,6 +2,7 @@ package com.example.quizapp.controllers;
 
 import com.example.quizapp.db.UserRepository;
 import com.example.quizapp.dto.AuthResponse;
+import com.example.quizapp.model.Role;
 import com.example.quizapp.model.User;
 import com.example.quizapp.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
@@ -48,5 +49,19 @@ public class UserController {
         System.out.println("DEBUG - Saved user with role: " + savedUser.getRole());
 
         return ResponseEntity.ok("User registered successfully");
+
+    }
+    @GetMapping("/is-admin/{username}")
+    public ResponseEntity<?> isAdmin(@PathVariable String username) {
+        return userRepo.findByUsername(username)
+                .map(user -> ResponseEntity.ok(user.getRole() == Role.ADMIN))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/is-player/{username}")
+    public ResponseEntity<?> isPlayer(@PathVariable String username) {
+        return userRepo.findByUsername(username)
+                .map(user -> ResponseEntity.ok(user.getRole() == Role.PLAYER))
+                .orElse(ResponseEntity.notFound().build());
     }
 }
