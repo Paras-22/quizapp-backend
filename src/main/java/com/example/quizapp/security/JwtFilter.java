@@ -40,14 +40,16 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 System.out.println("DEBUG - Token valid for user: " + username + " with role: " + role);
 
+                // FIXED: Use the role directly without ROLE_ prefix for Spring Security
+                // Spring Security's hasRole() method automatically adds ROLE_ prefix
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 username, null,
-                                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+                                Collections.singletonList(new SimpleGrantedAuthority(role))
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                System.out.println("DEBUG - Authentication set with authority: ROLE_" + role);
+                System.out.println("DEBUG - Authentication set with authority: " + role);
             } else {
                 System.out.println("DEBUG - Token validation failed");
             }
