@@ -24,22 +24,27 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers("/users/login", "/users/register").permitAll()
 
-                        // Admin-only endpoints
+                        // Admin-only tournament management
                         .requestMatchers(HttpMethod.POST, "/tournaments/create").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/tournaments/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/tournaments/**").hasRole("ADMIN")
+
+                        // Tournament GETs - allow any authenticated user (both PLAYER and ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/tournaments/**").authenticated()
+
+                        // Admin-only question management
                         .requestMatchers(HttpMethod.POST, "/api/questions/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/questions/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/questions/**").hasRole("ADMIN")
 
                         // Player-only endpoints
-                        .requestMatchers(HttpMethod.POST, "/tournaments/like/**", "/tournaments/unlike/**").hasRole("PLAYER")
                         .requestMatchers("/player/**").hasRole("PLAYER")
+                        .requestMatchers(HttpMethod.POST, "/tournaments/like/**", "/tournaments/unlike/**").hasRole("PLAYER")
 
-                        // Role check endpoints - any authenticated user can call
+                        // Role check endpoints - any authenticated user
                         .requestMatchers("/users/is-admin/**", "/users/is-player/**").authenticated()
 
-                        // All others need to be authenticated
+                        // Any other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
