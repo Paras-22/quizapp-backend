@@ -25,14 +25,20 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+
         String authHeader = request.getHeader("Authorization");
+        System.out.println("DEBUG - Auth header: " + authHeader);
+        System.out.println("DEBUG - Request URI: " + request.getRequestURI());
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
+            System.out.println("DEBUG - Token extracted: " + token.substring(0, Math.min(50, token.length())) + "...");
 
             if (jwtUtil.validateToken(token)) {
                 String username = jwtUtil.extractUsername(token);
                 String role = jwtUtil.extractRole(token);
+
+                System.out.println("DEBUG - Token valid for user: " + username + " with role: " + role);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
@@ -41,7 +47,12 @@ public class JwtFilter extends OncePerRequestFilter {
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                System.out.println("DEBUG - Authentication set with authority: ROLE_" + role);
+            } else {
+                System.out.println("DEBUG - Token validation failed");
             }
+        } else {
+            System.out.println("DEBUG - No Bearer token found");
         }
 
         filterChain.doFilter(request, response);
