@@ -22,8 +22,20 @@ public class PlayerController {
         this.service = service;
     }
 
+    private String getCurrentRole() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getAuthorities().isEmpty()) {
+            return "NONE";
+        }
+        return auth.getAuthorities().iterator().next().getAuthority();
+    }
+
     @PostMapping("/start/{tournamentId}")
     public ResponseEntity<?> startAttempt(@PathVariable Long tournamentId) {
+        String role = getCurrentRole();
+        if (!"PLAYER".equals(role)) {
+            return ResponseEntity.status(403).body("Access denied: Players only. Current role: " + role);
+        }
         try {
             PlayerAttempt attempt = service.startAttempt(tournamentId);
             return ResponseEntity.ok(attempt);
@@ -34,6 +46,10 @@ public class PlayerController {
 
     @PostMapping("/finish/{attemptId}")
     public ResponseEntity<?> finishAttempt(@PathVariable Long attemptId) {
+        String role = getCurrentRole();
+        if (!"PLAYER".equals(role)) {
+            return ResponseEntity.status(403).body("Access denied: Players only. Current role: " + role);
+        }
         try {
             PlayerAttempt attempt = service.finishAttempt(attemptId);
             return ResponseEntity.ok(attempt);
@@ -44,6 +60,10 @@ public class PlayerController {
 
     @PostMapping("/submit-answer")
     public ResponseEntity<?> submitAnswer(@RequestBody Map<String, Object> request) {
+        String role = getCurrentRole();
+        if (!"PLAYER".equals(role)) {
+            return ResponseEntity.status(403).body("Access denied: Players only. Current role: " + role);
+        }
         try {
             Long attemptId = Long.valueOf(request.get("attemptId").toString());
             Long tqId = Long.valueOf(request.get("tqId").toString());
@@ -58,12 +78,20 @@ public class PlayerController {
 
     @GetMapping("/tournament/{tournamentId}/questions")
     public ResponseEntity<?> getTournamentQuestions(@PathVariable Long tournamentId) {
+        String role = getCurrentRole();
+        if (!"PLAYER".equals(role)) {
+            return ResponseEntity.status(403).body("Access denied: Players only. Current role: " + role);
+        }
         List<TournamentQuestion> questions = service.getTournamentQuestions(tournamentId);
         return ResponseEntity.ok(questions);
     }
 
     @GetMapping("/my-attempts")
     public ResponseEntity<?> getMyAttempts() {
+        String role = getCurrentRole();
+        if (!"PLAYER".equals(role)) {
+            return ResponseEntity.status(403).body("Access denied: Players only. Current role: " + role);
+        }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         List<PlayerAttempt> attempts = service.getPlayerAttempts(username);

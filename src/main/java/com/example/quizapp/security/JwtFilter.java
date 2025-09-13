@@ -40,8 +40,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 System.out.println("DEBUG - Token valid for user: " + username + " with role: " + role);
 
-                // FIXED: Use the role directly without ROLE_ prefix for Spring Security
-                // Spring Security's hasRole() method automatically adds ROLE_ prefix
+                // Use exact role name for manual checking in controllers
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 username, null,
@@ -53,8 +52,6 @@ public class JwtFilter extends OncePerRequestFilter {
             } else {
                 System.out.println("DEBUG - Token validation failed");
             }
-        } else {
-            System.out.println("DEBUG - No Bearer token found");
         }
 
         filterChain.doFilter(request, response);
