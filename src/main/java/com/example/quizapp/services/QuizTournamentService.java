@@ -16,10 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 
 @Service
@@ -214,6 +211,40 @@ public class QuizTournamentService {
         tournament.setLikes(Math.max(0, tournament.getLikes() - 1));
         repo.save(tournament);
         return tournament.getLikes();
+    }
+
+    public Map<String, Object> getTournamentAnalytics() {
+        // Here I add logic to fetch all tournaments and all player attempts
+        List<QuizTournament> allTournaments = repo.findAll();
+        List<PlayerAttempt> allAttempts = playerAttemptRepo.findAll();
+
+        // Here I add a map to store analytics data
+        Map<String, Object> analytics = new HashMap<>();
+
+        // Here I add total tournament count
+        analytics.put("totalTournaments", allTournaments.size());
+
+        // Here I add total attempt count
+        analytics.put("totalAttempts", allAttempts.size());
+
+        // Here I add count of completed attempts
+        analytics.put("completedAttempts", allAttempts.stream().filter(PlayerAttempt::isCompleted).count());
+
+        // Here I add average score across completed attempts
+        analytics.put("averageScore", allAttempts.stream()
+                .filter(PlayerAttempt::isCompleted)
+                .mapToInt(PlayerAttempt::getScore)
+                .average()
+                .orElse(0.0));
+
+        // Here I add logic to find the tournament with the highest number of likes
+        analytics.put("mostPopularTournament", allTournaments.stream()
+                .max((t1, t2) -> Integer.compare(t1.getLikes(), t2.getLikes()))
+                .map(QuizTournament::getName)
+                .orElse("None"));
+
+        // Here I return the compiled analytics map
+        return analytics;
     }
 
     public ScoreboardResponse getScoreboard(Long tournamentId) {
