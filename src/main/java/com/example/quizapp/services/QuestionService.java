@@ -12,25 +12,25 @@ import java.util.Optional;
 public class QuestionService {
 
     @Autowired
-    private QuestionRepository questionRepository;
-
+    private QuestionRepository questionRepository; // Here I add repository injection for question operations
 
     public Question addQuestion(Question question) {
+        // Here I add logic to save a new question
         return questionRepository.save(question);
     }
 
-
     public List<Question> getAllQuestions() {
+        // Here I add logic to fetch all questions
         return questionRepository.findAll();
     }
 
-
     public Optional<Question> getQuestionById(Long id) {
+        // Here I add logic to fetch a question by ID
         return questionRepository.findById(id);
     }
 
-
     public Question updateQuestion(Long id, Question updatedQuestion) {
+        // Here I add logic to update an existing question
         return questionRepository.findById(id).map(existing -> {
             existing.setQuestionText(updatedQuestion.getQuestionText());
             existing.setOptionA(updatedQuestion.getOptionA());
@@ -42,8 +42,8 @@ public class QuestionService {
         }).orElse(null);
     }
 
-
     public void deleteQuestion(Long id) {
+        // Here I add logic to delete a question by ID
         questionRepository.deleteById(id);
     }
 }

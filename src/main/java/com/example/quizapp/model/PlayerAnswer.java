@@ -34,7 +34,11 @@ public class PlayerAnswer {
 
 
     public Long getId() { return id; }
-    public PlayerAttempt getAttempt() { return attempt; }
+
+    public PlayerAttempt getAttempt() {
+        return attempt;
+    }
+
     public void setAttempt(PlayerAttempt attempt) { this.attempt = attempt; }
     public Question getQuestion() { return question; }  // Returns Question
     public void setQuestion(Question question) { this.question = question; }  // Accepts Question

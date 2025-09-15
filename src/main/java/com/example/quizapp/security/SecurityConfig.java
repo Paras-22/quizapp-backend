@@ -20,7 +20,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
+                        //These are the Public endpoints
                         .requestMatchers("/users/login", "/users/register",
                                 "/users/password-reset-request",
                                 "/users/reset-password").permitAll()

@@ -38,7 +38,7 @@ public class User {
     private String phone;
     private String address;
 
-    // 3 Additional fields as required
+    // These are the additional fields that I have added.
     private String profilePicture; // URL to profile picture
     private String dateOfBirth;    // Date of birth
     private String bio;            // User biography/description
@@ -46,10 +46,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    // Default constructor
+
     public User() {}
 
-    // Getters and setters for all fields
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
