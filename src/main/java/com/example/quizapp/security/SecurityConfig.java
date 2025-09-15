@@ -21,8 +21,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers("/users/login", "/users/register").permitAll()
-                        // Everything else requires authentication - controllers handle role checks
+                        .requestMatchers("/users/login", "/users/register",
+                                "/users/password-reset-request",
+                                "/users/reset-password").permitAll()
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
