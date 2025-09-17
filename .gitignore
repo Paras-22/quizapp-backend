@@ -1,0 +1,14 @@
+# Build & IDE
+target/
+out/
+.idea/
+*.iml
+
+# Logs
+logs/
+*.log
+app.log
+
+# OS cruft
+.DS_Store
+Thumbs.db
