@@ -69,4 +69,5 @@ public class PlayerController {
         List<PlayerAttempt> attempts = service.getPlayerAttempts(username);
         return ResponseEntity.ok(attempts);
     }
+
 }
