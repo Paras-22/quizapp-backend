@@ -22,13 +22,13 @@ public class QuizTournamentController {
 
     private String getRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getAuthorities() == null || !auth.getAuthorities().iterator().hasNext()) {
+            return null;
+        }
         String authority = auth.getAuthorities().iterator().next().getAuthority();
-
-        System.out.println("DEBUG - Full authority: " + authority);
-        System.out.println("DEBUG - Username: " + auth.getName());
-
-        if (authority.startsWith("ROLE_")) {
-            return authority.substring(5);
+        // Normalize: remove ROLE_ prefix if present
+        if (authority != null && authority.startsWith("ROLE_")) {
+            return authority.substring(5); // returns 'ADMIN' or 'PLAYER'
         }
         return authority;
     }
