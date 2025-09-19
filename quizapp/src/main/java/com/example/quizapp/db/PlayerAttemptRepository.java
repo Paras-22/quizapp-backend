@@ -26,4 +26,6 @@ public interface PlayerAttemptRepository extends JpaRepository<PlayerAttempt, Lo
 
     @Query("SELECT AVG(pa.score) FROM PlayerAttempt pa WHERE pa.tournament.id = :tournamentId AND pa.completed = true")
     Double findAverageScoreByTournamentId(@Param("tournamentId") Long tournamentId);
+
+    List<PlayerAttempt> findByCompletedTrueOrderByScoreDesc();
 }
