@@ -27,34 +27,26 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
-        System.out.println("DEBUG - Auth header: " + authHeader);
-        System.out.println("DEBUG - Request URI: " + request.getRequestURI());
-
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            System.out.println("DEBUG - Token extracted: " + token.substring(0, Math.min(50, token.length())) + "...");
-
             if (jwtUtil.validateToken(token)) {
                 String username = jwtUtil.extractUsername(token);
-                String role = jwtUtil.extractRole(token);
+                String role = jwtUtil.extractRole(token); // e.g. "ADMIN" or "PLAYER"
 
-                System.out.println("DEBUG - Token valid for user: " + username + " with role: " + role);
+                // Always add ROLE_ prefix to conform to Spring Security hasRole() checks
+                String granted = role != null && role.startsWith("ROLE_") ? role : "ROLE_" + role;
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 username, null,
-                                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+                                Collections.singletonList(new SimpleGrantedAuthority(granted))
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                System.out.println("DEBUG - Authentication set with authority: ROLE_" + role);
-            } else {
-                System.out.println("DEBUG - Token validation failed");
             }
-        } else {
-            System.out.println("DEBUG - No Bearer token found");
         }
 
         filterChain.doFilter(request, response);
     }
+
 }
