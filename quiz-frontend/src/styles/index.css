@@ -1,9 +1,30 @@
+/* Add to quiz-frontend/src/styles/index.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom CSS additions */
+.card-hover {
+  @apply transform transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+}
+
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
 }
