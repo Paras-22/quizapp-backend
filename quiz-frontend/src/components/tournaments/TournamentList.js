@@ -1,43 +1,37 @@
 // src/components/tournaments/TournamentList.js
-import React from "react";
+import React from 'react';
+import TournamentCard from './TournamentCard';
 
-const TournamentList = ({ tournaments, onEdit, onDelete }) => {
+const TournamentList = ({ 
+  tournaments, 
+  isAdmin, 
+  onStart, 
+  onLike, 
+  onDelete, 
+  userAttempts 
+}) => {
+  if (!tournaments || tournaments.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <p>No tournaments available</p>
+      </div>
+    );
+  }
+
   return (
-    <table className="table-auto w-full border">
-      <thead>
-        <tr>
-          <th className="px-4 py-2">Creator</th>
-          <th className="px-4 py-2">Name</th>
-          <th className="px-4 py-2">Category</th>
-          <th className="px-4 py-2">Difficulty</th>
-          <th className="px-4 py-2">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {tournaments.map((tournament) => (
-          <tr key={tournament.id}>
-            <td className="border px-4 py-2">{tournament.creator}</td>
-            <td className="border px-4 py-2">{tournament.name}</td>
-            <td className="border px-4 py-2">{tournament.category}</td>
-            <td className="border px-4 py-2">{tournament.difficulty}</td>
-            <td className="border px-4 py-2 space-x-2">
-              <button
-                onClick={() => onEdit(tournament)}
-                className="bg-yellow-500 text-white px-2 py-1 rounded"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => onDelete(tournament.id)}
-                className="bg-red-500 text-white px-2 py-1 rounded"
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {tournaments.map(tournament => (
+        <TournamentCard
+          key={tournament.id}
+          tournament={tournament}
+          onStart={onStart}
+          onLike={onLike}
+          onDelete={onDelete}
+          isAdmin={isAdmin}
+          userAttempts={userAttempts}
+        />
+      ))}
+    </div>
   );
 };
 

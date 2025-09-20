@@ -13,67 +13,52 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 
-/**
- * JwtFilter:
- * - Reads Authorization header
- * - Validates JWT using JwtUtil
- * - Extracts username and role from token
- * - Puts an Authentication into SecurityContext with ROLE_ prefix (ROLE_ADMIN / ROLE_PLAYER)
- *
- * Making sure to always prefix roles with "ROLE_" makes integration with hasRole(...) consistent.
- */
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
     public JwtFilter(JwtUtil jwtUtil) {
+        // Here I add constructor injection for JwtUtil
         this.jwtUtil = jwtUtil;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        // Read Authorization header
+
+        // Here I add logic to extract Authorization header
         String authHeader = request.getHeader("Authorization");
+        System.out.println("DEBUG - Auth header: " + authHeader);
+        System.out.println("DEBUG - Request URI: " + request.getRequestURI());
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            // Here I add token extraction and validation
             String token = authHeader.substring(7);
-            try {
-                // Validate token
-                if (jwtUtil.validateToken(token)) {
-                    // Extract username & role from token
-                    String username = jwtUtil.extractUsername(token);
-                    String role = jwtUtil.extractRole(token); // should return "ADMIN" or "PLAYER" etc.
+            System.out.println("DEBUG - Token extracted: " + token.substring(0, Math.min(50, token.length())) + "...");
 
-                    // Normalize role to include ROLE_ prefix required by Spring Security's hasRole(...)
-                    String grantedRole;
-                    if (role == null || role.isBlank()) {
-                        grantedRole = "ROLE_USER"; // fallback
-                    } else {
-                        grantedRole = role.startsWith("ROLE_") ? role : ("ROLE_" + role);
-                    }
+            if (jwtUtil.validateToken(token)) {
+                // Here I add username and role extraction from token
+                String username = jwtUtil.extractUsername(token);
+                String role = jwtUtil.extractRole(token);
 
-                    // Create authentication token with granted authority list
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    username,
-                                    null,
-                                    Collections.singletonList(new SimpleGrantedAuthority(grantedRole))
-                            );
+                System.out.println("DEBUG - Token valid for user: " + username + " with role: " + role);
 
-                    // Put authentication into security context
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-            } catch (Exception ex) {
-                // If token invalid/expired - clear context and continue (request will be rejected by security)
-                SecurityContextHolder.clearContext();
-                // Optional: log token exception
-                logger.debug("JWT validation error: " + ex.getMessage());
+                // Here I add authentication setup in security context
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                username, null,
+                                Collections.singletonList(new SimpleGrantedAuthority(role))
+                        );
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                System.out.println("DEBUG - Authentication set with authority: " + role);
+            } else {
+                System.out.println("DEBUG - Token validation failed");
             }
         }
 
-        // Continue filter chain
+        // Here I add filter chain continuation
         filterChain.doFilter(request, response);
     }
 }

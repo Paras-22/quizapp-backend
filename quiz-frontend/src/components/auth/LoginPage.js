@@ -1,88 +1,126 @@
 // src/components/auth/LoginPage.js
-import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { apiService } from "../../services/api";
-import { AuthContext } from "../../context/AuthContext";
-import { ROLES } from "../../utils/constants";
+import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { Trophy, User, Lock, Mail } from 'lucide-react';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
+import Card from '../ui/Card';
+import RegisterForm from './RegisterForm';
 
 const LoginPage = () => {
-  const [form, setForm] = useState({ username: "", password: "" });
-  const [error, setError] = useState("");
-  const { setUser } = useContext(AuthContext);
-  const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setLoading(true);
+    setError('');
 
-    try {
-      const response = await fetch("http://localhost:8080/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      if (!response.ok) throw new Error("Invalid credentials");
-
-      const data = await response.json();
-
-      // Save token and role
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-
-      setUser({ username: data.username, role: data.role });
-
-      // Navigate to correct dashboard
-      if (data.role === ROLES.ADMIN) {
-        navigate("/admin");
-      } else {
-        navigate("/player");
-      }
-    } catch (err) {
-      setError("Login failed: " + err.message);
+    const result = await login(formData.username, formData.password);
+    
+    if (!result.success) {
+      setError(result.error);
     }
+    setLoading(false);
   };
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  if (!isLogin) {
+    return <RegisterForm onBack={() => setIsLogin(true)} />;
+  }
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow w-96">
-        <h2 className="text-2xl font-bold mb-6">Login</h2>
-        {error && <p className="text-red-500">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block">Username</label>
-            <input
-              type="text"
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      
+      <Card className="w-full max-w-md relative z-10">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 bg-blue-100 rounded-full">
+              <Trophy className="h-12 w-12 text-blue-600" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Quiz Tournament</h1>
+          <p className="text-gray-600">Test your knowledge and compete with others!</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative">
+            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
               name="username"
-              value={form.username}
+              type="text"
+              placeholder="Enter your username"
+              value={formData.username}
               onChange={handleChange}
-              className="border w-full p-2"
+              className="pl-10"
               required
             />
           </div>
-          <div className="mb-4">
-            <label className="block">Password</label>
-            <input
-              type="password"
+          
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
               name="password"
-              value={form.password}
+              type="password"
+              placeholder="Enter your password"
+              value={formData.password}
               onChange={handleChange}
-              className="border w-full p-2"
+              className="pl-10"
               required
             />
           </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded"
-          >
-            Login
-          </button>
+
+          {error && (
+            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Signing in...
+              </div>
+            ) : (
+              'Sign In'
+            )}
+          </Button>
         </form>
-      </div>
+
+        <div className="mt-6 text-center">
+          <p className="text-gray-600">
+            Don't have an account?{' '}
+            <button
+              onClick={() => setIsLogin(false)}
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Register here
+            </button>
+          </p>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="text-xs text-gray-500 space-y-1">
+            <p><strong>Demo Accounts:</strong></p>
+            <p>Admin: admin / op@1234</p>
+            <p>Player: player1 / password123</p>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };

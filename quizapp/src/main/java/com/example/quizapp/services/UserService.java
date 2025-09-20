@@ -13,19 +13,23 @@ public class UserService {
     private final UserRepository repo;
 
     public UserService(UserRepository repo) {
+        // Here I add constructor injection for UserRepository
         this.repo = repo;
     }
 
     public User register(User user) {
+        // Here I add logic to save a new user
         return repo.save(user);
     }
 
     public Optional<User> login(String username, String password) {
+        // Here I add logic to authenticate user by matching password
         return repo.findByUsername(username)
                 .filter(u -> u.getPassword().equals(password));
     }
 
     public User updateProfile(Long id, User updated) {
+        // Here I add logic to update user profile fields
         return repo.findById(id).map(user -> {
             user.setUsername(updated.getUsername());
             user.setFirstName(updated.getFirstName());
@@ -38,19 +42,21 @@ public class UserService {
     }
 
     public String resetPassword(String email) {
+        // Here I add logic to simulate password reset flow
         return repo.findByEmail(email)
                 .map(user -> "Password reset link sent to " + user.getEmail())
                 .orElse("Email not found");
     }
 
-    // ✅ Role checks now work with enums
     public boolean isAdmin(String username) {
+        // Here I add role check for ADMIN
         return repo.findByUsername(username)
                 .map(u -> u.getRole() == Role.ADMIN)
                 .orElse(false);
     }
 
     public boolean isPlayer(String username) {
+        // Here I add role check for PLAYER
         return repo.findByUsername(username)
                 .map(u -> u.getRole() == Role.PLAYER)
                 .orElse(false);

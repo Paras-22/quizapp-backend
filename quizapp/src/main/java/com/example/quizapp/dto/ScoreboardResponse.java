@@ -4,11 +4,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class ScoreboardResponse {
-    private String tournamentName;
-    private int likes;
-    private long totalPlayers;
-    private double averageScore;
-    private List<PlayerScore> scores;
+    private String tournamentName; // name of the tournament
+    private int likes; // total likes
+    private long totalPlayers; // number of players participated
+    private double averageScore; // average score of completed attempts
+    private List<PlayerScore> scores; // list of individual player scores
 
     public static class PlayerScore {
         private String playerName;
