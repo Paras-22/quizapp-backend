@@ -1,170 +1,103 @@
 // src/components/auth/RegisterForm.js
-import React, { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { Trophy, User, Lock, Mail, ArrowLeft } from 'lucide-react';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
-import Card from '../ui/Card';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const RegisterForm = ({ onBack }) => {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    bio: '',
-    role: 'PLAYER'
+const RegisterForm = () => {
+  const [form, setForm] = useState({
+    username: "",
+    password: "",
+    email: "",
+    role: "PLAYER", // default
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
-    const result = await register(formData);
-    
-    if (result.success) {
-      setSuccess('Registration successful! You can now login.');
-      setTimeout(() => onBack(), 2000);
-    } else {
-      setError(result.error);
+    try {
+      const response = await fetch("http://localhost:8080/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (!response.ok) throw new Error("Registration failed");
+
+      setSuccess("Registration successful! Please log in.");
+      setTimeout(() => navigate("/login"), 1500);
+    } catch (err) {
+      setError("Error: " + err.message);
     }
-    setLoading(false);
-  };
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg">
-        <div className="flex items-center mb-6">
-          <Button variant="outline" size="sm" onClick={onBack} className="mr-4">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="text-center flex-1">
-            <Trophy className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-            <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-            <p className="text-gray-600">Join the quiz tournament!</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              name="firstName"
-              placeholder="First Name"
-              value={formData.firstName}
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded shadow w-96">
+        <h2 className="text-2xl font-bold mb-6">Register</h2>
+        {error && <p className="text-red-500">{error}</p>}
+        {success && <p className="text-green-500">{success}</p>}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block">Username</label>
+            <input
+              type="text"
+              name="username"
+              value={form.username}
               onChange={handleChange}
-              required
-            />
-            <Input
-              name="lastName"
-              placeholder="Last Name"
-              value={formData.lastName}
-              onChange={handleChange}
+              className="border w-full p-2"
               required
             />
           </div>
-
-          <Input
-            name="username"
-            placeholder="Username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-          />
-
-          <Input
-            name="email"
-            type="email"
-            placeholder="Email Address"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-
-          <Input
-            name="password"
-            type="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-
-          <Input
-            name="phone"
-            placeholder="Phone Number (Optional)"
-            value={formData.phone}
-            onChange={handleChange}
-          />
-
-          <Input
-            name="address"
-            placeholder="Address (Optional)"
-            value={formData.address}
-            onChange={handleChange}
-          />
-
-          <textarea
-            name="bio"
-            placeholder="Tell us about yourself (Optional)"
-            value={formData.bio}
-            onChange={handleChange}
-            rows="3"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+          <div className="mb-4">
+            <label className="block">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              className="border w-full p-2"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              className="border w-full p-2"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block">Role</label>
             <select
               name="role"
-              value={formData.role}
+              value={form.role}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border w-full p-2"
             >
               <option value="PLAYER">Player</option>
-              <option value="ADMIN">Administrator</option>
+              <option value="ADMIN">Admin</option>
             </select>
           </div>
-
-          {error && (
-            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
-              {success}
-            </div>
-          )}
-
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? (
-              <div className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Creating Account...
-              </div>
-            ) : (
-              'Create Account'
-            )}
-          </Button>
+          <button
+            type="submit"
+            className="w-full bg-green-600 text-white py-2 rounded"
+          >
+            Register
+          </button>
         </form>
-      </Card>
+      </div>
     </div>
   );
 };
