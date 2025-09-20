@@ -81,11 +81,31 @@ export const apiService = {
   },
 
   async getPlayerStats() {
+  try {
     const response = await fetch(`${API_BASE_URL}/users/stats`, {
       headers: getAuthHeaders()
     });
-    return handleResponse(response);
-  },
+    
+    if (!response.ok) {
+      console.error('Stats API response not ok:', response.status);
+      throw new Error(`Stats API Error: ${response.status}`);
+    }
+    
+    const stats = await response.json();
+    console.log('Stats received from backend:', stats);
+    return stats;
+    
+  } catch (error) {
+    console.error('Error fetching player stats:', error);
+    // Return default stats instead of throwing
+    return {
+      tournamentsPlayed: 0,
+      averageScore: 0.0,
+      bestScore: 0,
+      totalPoints: 0
+    };
+  }
+},
 
   async getTournamentQuestions(tournamentId) {
     const response = await fetch(`${API_BASE_URL}/player/tournament/${tournamentId}/questions`, {
