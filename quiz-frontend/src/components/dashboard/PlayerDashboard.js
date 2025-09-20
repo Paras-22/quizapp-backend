@@ -24,23 +24,53 @@ const PlayerDashboard = () => {
     loadDashboardData();
   }, []);
 
-  const loadDashboardData = async () => {
+  
+
+const loadDashboardData = async () => {
+  try {
+    const [tournamentsData, attemptsData] = await Promise.all([
+      apiService.getTournaments(),
+      apiService.getMyAttempts()
+    ]);
+    
+    setTournaments(tournamentsData);
+    setAttempts(attemptsData);
+    
+    // Calculate stats from attempts data as fallback
+    const completedAttempts = attemptsData.filter(attempt => attempt.completed);
+    const fallbackStats = {
+      tournamentsPlayed: completedAttempts.length,
+      averageScore: completedAttempts.length > 0 
+        ? completedAttempts.reduce((sum, attempt) => sum + attempt.score, 0) / completedAttempts.length 
+        : 0,
+      bestScore: completedAttempts.length > 0 
+        ? Math.max(...completedAttempts.map(attempt => attempt.score)) 
+        : 0,
+      totalPoints: completedAttempts.reduce((sum, attempt) => sum + attempt.score, 0)
+    };
+    
+    // Try to get stats from backend, use fallback if fails
     try {
-      const [tournamentsData, attemptsData, statsData] = await Promise.all([
-        apiService.getTournaments(),
-        apiService.getMyAttempts(),
-        apiService.getPlayerStats()
-      ]);
-      
-      setTournaments(tournamentsData);
-      setAttempts(attemptsData);
+      const statsData = await apiService.getPlayerStats();
       setStats(statsData);
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setLoading(false);
+    } catch (statsError) {
+      console.warn('Failed to load stats from backend, using calculated stats:', statsError);
+      setStats(fallbackStats);
     }
-  };
+    
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    // Set default values on complete failure
+    setStats({
+      tournamentsPlayed: 0,
+      averageScore: 0,
+      bestScore: 0,
+      totalPoints: 0
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleStartTournament = async (tournamentId) => {
     try {
