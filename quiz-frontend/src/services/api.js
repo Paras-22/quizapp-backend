@@ -1,4 +1,4 @@
-// src/services/api.js
+// quiz-frontend/src/services/api.js
 const API_BASE_URL = 'http://localhost:8080';
 
 const getAuthHeaders = () => ({
@@ -8,7 +8,8 @@ const getAuthHeaders = () => ({
 
 const handleResponse = async (response) => {
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
+    const errorText = await response.text();
+    throw new Error(`API Error: ${response.status} - ${errorText}`);
   }
   return response.json();
 };
@@ -108,5 +109,18 @@ export const apiService = {
       headers: getAuthHeaders()
     });
     return handleResponse(response);
+  },
+
+  // Additional methods for better error handling
+  async testConnection() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tournaments/debug-auth`, {
+        headers: getAuthHeaders()
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      return false;
+    }
   }
 };

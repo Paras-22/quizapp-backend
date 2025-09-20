@@ -38,11 +38,11 @@ const TournamentCard = ({
   };
 
   return (
-    <Card hover className="h-full">
+    <Card className="h-full transform transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
+            <h3 className="text-lg font-semibold text-gray-900 overflow-hidden">
               {tournament.name}
             </h3>
             {getStatusBadge()}
@@ -74,7 +74,7 @@ const TournamentCard = ({
           <>
             <Button 
               size="sm" 
-              onClick={() => onStart(tournament.id)}
+              onClick={() => onStart && onStart(tournament.id)}
               disabled={hasAttempted || !isOngoing()}
               variant={hasAttempted ? 'secondary' : 'primary'}
               className="flex-1"
@@ -85,7 +85,7 @@ const TournamentCard = ({
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => onLike(tournament.id)}
+              onClick={() => onLike && onLike(tournament.id)}
               className="px-3"
             >
               <Star className="h-4 w-4" />
@@ -97,7 +97,7 @@ const TournamentCard = ({
           <Button 
             size="sm" 
             variant="danger" 
-            onClick={() => onDelete(tournament.id)}
+            onClick={() => onDelete && onDelete(tournament.id)}
             className="flex-1"
           >
             Delete
