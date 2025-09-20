@@ -14,11 +14,9 @@ const handleResponse = async (response) => {
 };
 
 export const apiService = {
-  // -------------------
   // Tournament APIs
-  // -------------------
   async getTournaments() {
-    const response = await fetch(`${API_BASE_URL}/tournaments/all`, {
+    const response = await fetch(`${API_BASE_URL}/tournaments`, {
       headers: getAuthHeaders()
     });
     return handleResponse(response);
@@ -34,7 +32,7 @@ export const apiService = {
   },
 
   async updateTournament(id, data) {
-    const response = await fetch(`${API_BASE_URL}/tournaments/update/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/tournaments/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(data)
@@ -43,7 +41,7 @@ export const apiService = {
   },
 
   async deleteTournament(id) {
-    const response = await fetch(`${API_BASE_URL}/tournaments/delete/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/tournaments/${id}?confirm=yes`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
@@ -58,13 +56,6 @@ export const apiService = {
     return handleResponse(response);
   },
 
-  async getTournamentQuestions(tournamentId) {
-    const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/questions`, {
-      headers: getAuthHeaders()
-    });
-    return handleResponse(response);
-  },
-
   async getScoreboard(id) {
     const response = await fetch(`${API_BASE_URL}/tournaments/${id}/scores`, {
       headers: getAuthHeaders()
@@ -72,28 +63,9 @@ export const apiService = {
     return handleResponse(response);
   },
 
-  // -------------------
   // Player APIs
-  // -------------------
   async startTournament(id) {
     const response = await fetch(`${API_BASE_URL}/player/start/${id}`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
-    return handleResponse(response);
-  },
-
-  async submitAnswer(attemptId, questionId, data) {
-    const response = await fetch(`${API_BASE_URL}/player/submit/${attemptId}/${questionId}`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data)
-    });
-    return handleResponse(response);
-  },
-
-  async finishTournament(attemptId) {
-    const response = await fetch(`${API_BASE_URL}/player/finish/${attemptId}`, {
       method: 'POST',
       headers: getAuthHeaders()
     });
@@ -114,41 +86,26 @@ export const apiService = {
     return handleResponse(response);
   },
 
-  // -------------------
-  // Auth APIs
-  // -------------------
-  async register(data) {
-    const response = await fetch(`${API_BASE_URL}/users/register`, {
+  async getTournamentQuestions(tournamentId) {
+    const response = await fetch(`${API_BASE_URL}/player/tournament/${tournamentId}/questions`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+  },
+
+  async submitAnswer(data) {
+    const response = await fetch(`${API_BASE_URL}/player/submit-answer`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data)
     });
     return handleResponse(response);
   },
 
-  async login(data) {
-    const response = await fetch(`${API_BASE_URL}/users/login`, {
+  async finishTournament(attemptId) {
+    const response = await fetch(`${API_BASE_URL}/player/finish/${attemptId}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return handleResponse(response);
-  },
-
-  async requestPasswordReset(email) {
-    const response = await fetch(`${API_BASE_URL}/users/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    return handleResponse(response);
-  },
-
-  async confirmPasswordReset(token, newPassword) {
-    const response = await fetch(`${API_BASE_URL}/users/reset-password/confirm?token=${token}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ newPassword })
+      headers: getAuthHeaders()
     });
     return handleResponse(response);
   }
