@@ -11,7 +11,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import com.example.quizapp.db.PlayerAttemptRepository;
+import com.example.quizapp.model.PlayerAttempt;
 
+import java.util.List;
 import jakarta.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,11 +25,13 @@ import java.util.UUID;
 @RequestMapping("/users")
 public class UserController {
 
+    private final PlayerAttemptRepository playerAttemptRepo;
     private final UserRepository userRepo;
     private final JwtUtil jwtUtil;
    // private final EmailService emailService;
 
-    public UserController(UserRepository userRepo, JwtUtil jwtUtil) {
+    public UserController(PlayerAttemptRepository playerAttemptRepo, UserRepository userRepo, JwtUtil jwtUtil) {
+        this.playerAttemptRepo = playerAttemptRepo;
         this.userRepo = userRepo;
         this.jwtUtil = jwtUtil;
         //this.emailService = emailService;
@@ -263,6 +268,7 @@ public class UserController {
         return ResponseEntity.ok("User status toggled successfully");
     }
 
+
     @GetMapping("/stats")
     public ResponseEntity<?> getPlayerStats() {
         String currentUsername = getCurrentUsername();
@@ -270,13 +276,52 @@ public class UserController {
             return ResponseEntity.status(401).body("User not authenticated");
         }
 
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("tournamentsPlayed", 0);
-        stats.put("averageScore", 0.0);
-        stats.put("bestScore", 0);
-        stats.put("totalPoints", 0);
+        try {
+            // Get all attempts for this player
+            List<PlayerAttempt> attempts = playerAttemptRepo.findByPlayerUsername(currentUsername);
+            List<PlayerAttempt> completedAttempts = attempts.stream()
+                    .filter(PlayerAttempt::isCompleted)
+                    .toList();
 
-        return ResponseEntity.ok(stats);
+            Map<String, Object> stats = new HashMap<>();
+
+            // Calculate tournaments played (completed attempts only)
+            stats.put("tournamentsPlayed", completedAttempts.size());
+
+            // Calculate average score
+            double averageScore = completedAttempts.stream()
+                    .mapToInt(PlayerAttempt::getScore)
+                    .average()
+                    .orElse(0.0);
+            stats.put("averageScore", Math.round(averageScore * 10.0) / 10.0); // Round to 1 decimal
+
+            // Calculate best score
+            int bestScore = completedAttempts.stream()
+                    .mapToInt(PlayerAttempt::getScore)
+                    .max()
+                    .orElse(0);
+            stats.put("bestScore", bestScore);
+
+            // Calculate total points (sum of all scores)
+            int totalPoints = completedAttempts.stream()
+                    .mapToInt(PlayerAttempt::getScore)
+                    .sum();
+            stats.put("totalPoints", totalPoints);
+
+            return ResponseEntity.ok(stats);
+
+        } catch (Exception e) {
+            System.err.println("Error calculating stats for user " + currentUsername + ": " + e.getMessage());
+
+            // Return default stats in case of error
+            Map<String, Object> defaultStats = new HashMap<>();
+            defaultStats.put("tournamentsPlayed", 0);
+            defaultStats.put("averageScore", 0.0);
+            defaultStats.put("bestScore", 0);
+            defaultStats.put("totalPoints", 0);
+
+            return ResponseEntity.ok(defaultStats);
+        }
     }
 
     @PostMapping("/follow/{username}")
