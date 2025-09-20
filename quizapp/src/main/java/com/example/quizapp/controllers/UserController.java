@@ -31,7 +31,20 @@ public class UserController {
         this.jwtUtil = jwtUtil;
         //this.emailService = emailService;
     }
+    private String getCurrentRole() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getAuthorities().isEmpty()) {
+            return "NONE";
+        }
 
+        String authority = auth.getAuthorities().iterator().next().getAuthority();
+
+        // Remove ROLE_ prefix if present (Spring Security adds this automatically)
+        if (authority.startsWith("ROLE_")) {
+            return authority.substring(5); // Returns "ADMIN" instead of "ROLE_ADMIN"
+        }
+        return authority;
+    }
     private String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null ? auth.getName() : null;

@@ -24,12 +24,18 @@ public class QuizTournamentController {
     }
 
     private String getCurrentRole() {
-        // Here I add logic to fetch current user's role from security context
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getAuthorities().isEmpty()) {
             return "NONE";
         }
-        return auth.getAuthorities().iterator().next().getAuthority();
+
+        String authority = auth.getAuthorities().iterator().next().getAuthority();
+
+        // Remove ROLE_ prefix if present (Spring Security adds this automatically)
+        if (authority.startsWith("ROLE_")) {
+            return authority.substring(5); // Returns "ADMIN" instead of "ROLE_ADMIN"
+        }
+        return authority;
     }
 
     @GetMapping("/debug-auth")
