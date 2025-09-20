@@ -19,7 +19,10 @@ public class QuizTournament {
     private String category;
 
     @NotBlank
-    private String difficulty; // Easy, Medium, Hard
+    private String difficulty;
+
+    @NotBlank(message = "Creator cannot be blank")
+    private String creator;
 
     @NotNull
     private LocalDate startDate;
@@ -57,4 +60,7 @@ public class QuizTournament {
 
     public int getLikes() { return likes; }
     public void setLikes(int likes) { this.likes = likes; }
+
+    public String getCreator() { return creator; }
+    public void setCreator(String creator) { this.creator = creator; }
 }
