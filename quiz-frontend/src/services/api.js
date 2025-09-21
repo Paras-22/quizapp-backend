@@ -123,6 +123,48 @@ export const apiService = {
     return handleResponse(response);
   },
 
+  async getProfile() {
+  const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    headers: getAuthHeaders()
+  });
+  return handleResponse(response);
+},
+
+// Update user profile
+async updateProfile(profileData) {
+  const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(profileData)
+  });
+  return handleResponse(response);
+},
+
+async uploadProfilePicture(file) {
+  const formData = new FormData();
+  formData.append('profilePicture', file);
+  
+  const response = await fetch(`${API_BASE_URL}/users/profile/picture`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+      // Don't set Content-Type, let browser set it for FormData
+    },
+    body: formData
+  });
+  return handleResponse(response);
+},
+
+// Change password
+async changePassword(passwordData) {
+  const response = await fetch(`${API_BASE_URL}/users/change-password`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(passwordData)
+  });
+  return handleResponse(response);
+},
+
   async finishTournament(attemptId) {
     const response = await fetch(`${API_BASE_URL}/player/finish/${attemptId}`, {
       method: 'POST',
