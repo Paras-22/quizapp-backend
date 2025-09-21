@@ -24,10 +24,11 @@ public class PlayerController {
     private final PlayerService service;
     private final QuizTournamentService tournamentService;
     private final PlayerAttemptRepository playerAttemptRepo;
-    private final PlayerAttemptRepository playerAnswerRepo;
+    private final PlayerAnswerRepository playerAnswerRepo;
 
-    public PlayerController(PlayerService service, QuizTournamentService tournamentService, PlayerAttemptRepository playerAttemptRepo, PlayerAttemptRepository playerAnswerRepo) {
-        // Here I add constructor injection for player and tournament services
+
+    // Fix 1: Correct the constructor - change PlayerAttemptRepository to PlayerAnswerRepository for the last parameter
+    public PlayerController(PlayerService service, QuizTournamentService tournamentService, PlayerAttemptRepository playerAttemptRepo, PlayerAnswerRepository playerAnswerRepo) {
         this.service = service;
         this.tournamentService = tournamentService;
         this.playerAttemptRepo = playerAttemptRepo;
@@ -207,8 +208,6 @@ public class PlayerController {
         return ResponseEntity.ok(questions);
     }
 
-    // Add this method to your PlayerController.java
-
     @GetMapping("/attempt/{attemptId}/answers")
     public ResponseEntity<?> getAttemptAnswers(@PathVariable Long attemptId) {
         String role = getCurrentRole();
@@ -219,7 +218,7 @@ public class PlayerController {
         String currentUsername = getCurrentUsername();
 
         try {
-            // Verify the attempt belongs to the current user
+            // Use your actual field name: playerAttemptRepo (not attemptRepo)
             PlayerAttempt attempt = playerAttemptRepo.findById(attemptId)
                     .orElseThrow(() -> new RuntimeException("Attempt not found"));
 
@@ -231,7 +230,7 @@ public class PlayerController {
                 return ResponseEntity.badRequest().body("Cannot review incomplete attempt");
             }
 
-            // Get all answers for this attempt
+            // Use your actual field name: playerAnswerRepo (not answerRepo)
             List<PlayerAnswer> answers = playerAnswerRepo.findByAttempt(attempt);
 
             return ResponseEntity.ok(answers);
