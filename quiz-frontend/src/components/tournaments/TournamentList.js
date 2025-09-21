@@ -8,6 +8,8 @@ const TournamentList = ({
   onStart, 
   onLike, 
   onDelete, 
+    onEdit,        // Add this
+  onViewQuestions,
   userAttempts 
 }) => {
   if (!tournaments || tournaments.length === 0) {
@@ -27,6 +29,8 @@ const TournamentList = ({
           onStart={onStart}
           onLike={onLike}
           onDelete={onDelete}
+              onEdit={onEdit}              
+    onViewQuestions={onViewQuestions} 
           isAdmin={isAdmin}
           userAttempts={userAttempts}
         />
