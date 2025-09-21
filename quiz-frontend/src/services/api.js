@@ -131,6 +131,13 @@ export const apiService = {
     return handleResponse(response);
   },
 
+  async getAttemptAnswers(attemptId) {
+  const response = await fetch(`${API_BASE_URL}/player/attempt/${attemptId}/answers`, {
+    headers: getAuthHeaders()
+  });
+  return handleResponse(response);
+},
+
   // Additional methods for better error handling
   async testConnection() {
     try {
