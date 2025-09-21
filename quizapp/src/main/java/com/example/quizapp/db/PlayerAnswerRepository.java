@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface PlayerAnswerRepository extends JpaRepository<PlayerAnswer, Long> {
 
+
     List<PlayerAnswer> findByAttempt(PlayerAttempt attempt);
     long countByAttemptAndCorrectTrue(PlayerAttempt attempt);
+
 }

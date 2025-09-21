@@ -21,6 +21,8 @@ public interface PlayerAttemptRepository extends JpaRepository<PlayerAttempt, Lo
     // Here I add method to fetch all attempts for a specific tournament
     List<PlayerAttempt> findByTournamentId(Long tournamentId);
 
+
+
     // Here I add method to fetch completed attempts for a tournament
     List<PlayerAttempt> findByTournamentIdAndCompletedTrue(Long tournamentId);
 
@@ -40,5 +42,5 @@ public interface PlayerAttemptRepository extends JpaRepository<PlayerAttempt, Lo
     @Query("SELECT AVG(pa.score) FROM PlayerAttempt pa WHERE pa.tournament.id = :tournamentId AND pa.completed = true")
     Double findAverageScoreByTournamentId(@Param("tournamentId") Long tournamentId);
 
-    List<PlayerAnswer> findByAttempt(PlayerAttempt attempt);
+
 }
