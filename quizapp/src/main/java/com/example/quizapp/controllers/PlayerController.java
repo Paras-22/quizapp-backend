@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.example.quizapp.db.PlayerAttemptRepository;
+import com.example.quizapp.db.PlayerAnswerRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,11 +23,15 @@ public class PlayerController {
 
     private final PlayerService service;
     private final QuizTournamentService tournamentService;
+    private final PlayerAttemptRepository playerAttemptRepo;
+    private final PlayerAttemptRepository playerAnswerRepo;
 
-    public PlayerController(PlayerService service, QuizTournamentService tournamentService) {
+    public PlayerController(PlayerService service, QuizTournamentService tournamentService, PlayerAttemptRepository playerAttemptRepo, PlayerAttemptRepository playerAnswerRepo) {
         // Here I add constructor injection for player and tournament services
         this.service = service;
         this.tournamentService = tournamentService;
+        this.playerAttemptRepo = playerAttemptRepo;
+        this.playerAnswerRepo = playerAnswerRepo;
     }
 
     private String getCurrentRole() {
@@ -199,6 +205,40 @@ public class PlayerController {
         // Here I add logic to fetch all questions for a tournament
         List<TournamentQuestion> questions = service.getTournamentQuestions(tournamentId);
         return ResponseEntity.ok(questions);
+    }
+
+    // Add this method to your PlayerController.java
+
+    @GetMapping("/attempt/{attemptId}/answers")
+    public ResponseEntity<?> getAttemptAnswers(@PathVariable Long attemptId) {
+        String role = getCurrentRole();
+        if (!"PLAYER".equals(role)) {
+            return ResponseEntity.status(403).body("Access denied: Players only");
+        }
+
+        String currentUsername = getCurrentUsername();
+
+        try {
+            // Verify the attempt belongs to the current user
+            PlayerAttempt attempt = playerAttemptRepo.findById(attemptId)
+                    .orElseThrow(() -> new RuntimeException("Attempt not found"));
+
+            if (!attempt.getPlayer().getUsername().equals(currentUsername)) {
+                return ResponseEntity.status(403).body("Access denied: Not your attempt");
+            }
+
+            if (!attempt.isCompleted()) {
+                return ResponseEntity.badRequest().body("Cannot review incomplete attempt");
+            }
+
+            // Get all answers for this attempt
+            List<PlayerAnswer> answers = playerAnswerRepo.findByAttempt(attempt);
+
+            return ResponseEntity.ok(answers);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/my-attempts")

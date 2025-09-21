@@ -1,5 +1,6 @@
 package com.example.quizapp.db;
 
+import com.example.quizapp.model.PlayerAnswer;
 import com.example.quizapp.model.PlayerAttempt;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -38,4 +39,6 @@ public interface PlayerAttemptRepository extends JpaRepository<PlayerAttempt, Lo
     // Here I add query to calculate average score for a tournament
     @Query("SELECT AVG(pa.score) FROM PlayerAttempt pa WHERE pa.tournament.id = :tournamentId AND pa.completed = true")
     Double findAverageScoreByTournamentId(@Param("tournamentId") Long tournamentId);
+
+    List<PlayerAnswer> findByAttempt(PlayerAttempt attempt);
 }
