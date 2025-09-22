@@ -1,7 +1,7 @@
-// Enhanced TournamentForm.js with creator field and better validation
+// Enhanced TournamentForm.js with larger, more spacious design
 import React, { useState } from 'react';
 import { apiService } from '../../services/api';
-import { X } from 'lucide-react';
+import { X, Trophy, Calendar, User, Settings, Info } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { DIFFICULTY_LEVELS, CATEGORIES } from '../../utils/constants';
@@ -24,21 +24,18 @@ const TournamentForm = ({ tournament = null, onSuccess, onCancel }) => {
   const validateForm = () => {
     const newErrors = {};
     
-    // Creator validation
     if (!formData.creator.trim()) {
       newErrors.creator = 'Creator name is required';
     } else if (formData.creator.trim().length < 2) {
       newErrors.creator = 'Creator name must be at least 2 characters';
     }
     
-    // Tournament name validation
     if (!formData.name.trim()) {
       newErrors.name = 'Tournament name is required';
     } else if (formData.name.trim().length < 3) {
       newErrors.name = 'Tournament name must be at least 3 characters';
     }
     
-    // Date validation
     const startDate = new Date(formData.startDate);
     const endDate = new Date(formData.endDate);
     const today = new Date();
@@ -52,7 +49,6 @@ const TournamentForm = ({ tournament = null, onSuccess, onCancel }) => {
       newErrors.endDate = 'End date must be after start date';
     }
     
-    // Passing score validation
     if (formData.minPassingScore < 0 || formData.minPassingScore > 100) {
       newErrors.minPassingScore = 'Passing score must be between 0 and 100';
     }
@@ -92,7 +88,6 @@ const TournamentForm = ({ tournament = null, onSuccess, onCancel }) => {
       [name]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -102,125 +97,243 @@ const TournamentForm = ({ tournament = null, onSuccess, onCancel }) => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">
-          {isEditing ? 'Update Tournament' : 'Create New Tournament'}
-        </h2>
-        <Button variant="outline" size="sm" onClick={onCancel}>
-          <X className="h-4 w-4" />
-        </Button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-6xl max-h-screen overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b p-8 flex justify-between items-center rounded-t-lg">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-blue-100 rounded-full">
+              <Trophy className="h-8 w-8 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                {isEditing ? 'Update Tournament' : 'Create New Tournament'}
+              </h2>
+              <p className="text-lg text-gray-600 mt-1">
+                {isEditing ? 'Modify tournament details' : 'Set up a new quiz tournament for players'}
+              </p>
+            </div>
+          </div>
+          <Button variant="outline" size="lg" onClick={onCancel}>
+            <X className="h-6 w-6" />
+          </Button>
+        </div>
+
+        <div className="p-8">
+          {/* Tournament Information Section */}
+          <div className="mb-10">
+            <div className="flex items-center space-x-3 mb-6">
+              <Info className="h-6 w-6 text-blue-600" />
+              <h3 className="text-2xl font-semibold text-gray-900">Tournament Information</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-lg font-medium text-gray-700 mb-3">
+                    Creator Name *
+                  </label>
+                  <input
+                    name="creator"
+                    value={formData.creator}
+                    onChange={handleChange}
+                    placeholder="Enter creator name"
+                    className={`w-full px-4 py-3 text-lg border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                      errors.creator ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    required
+                  />
+                  {errors.creator && <p className="mt-2 text-sm text-red-600">{errors.creator}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-lg font-medium text-gray-700 mb-3">
+                    Tournament Name *
+                  </label>
+                  <input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter tournament name"
+                    className={`w-full px-4 py-3 text-lg border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                      errors.name ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    required
+                  />
+                  {errors.name && <p className="mt-2 text-sm text-red-600">{errors.name}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-lg font-medium text-gray-700 mb-3">
+                    Category *
+                  </label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                    required
+                  >
+                    {CATEGORIES.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-lg font-medium text-gray-700 mb-3">
+                    Difficulty Level *
+                  </label>
+                  <select
+                    name="difficulty"
+                    value={formData.difficulty}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                    required
+                  >
+                    {DIFFICULTY_LEVELS.map(level => (
+                      <option key={level} value={level}>{level}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Schedule Section */}
+          <div className="mb-10">
+            <div className="flex items-center space-x-3 mb-6">
+              <Calendar className="h-6 w-6 text-green-600" />
+              <h3 className="text-2xl font-semibold text-gray-900">Tournament Schedule</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-lg font-medium text-gray-700 mb-3">
+                  Start Date *
+                </label>
+                <input
+                  name="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 text-lg border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                    errors.startDate ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  required
+                />
+                {errors.startDate && <p className="mt-2 text-sm text-red-600">{errors.startDate}</p>}
+                <p className="mt-2 text-sm text-gray-600">When players can start participating</p>
+              </div>
+
+              <div>
+                <label className="block text-lg font-medium text-gray-700 mb-3">
+                  End Date *
+                </label>
+                <input
+                  name="endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 text-lg border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                    errors.endDate ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  required
+                />
+                {errors.endDate && <p className="mt-2 text-sm text-red-600">{errors.endDate}</p>}
+                <p className="mt-2 text-sm text-gray-600">Last day for participation</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Settings Section */}
+          <div className="mb-10">
+            <div className="flex items-center space-x-3 mb-6">
+              <Settings className="h-6 w-6 text-purple-600" />
+              <h3 className="text-2xl font-semibold text-gray-900">Tournament Settings</h3>
+            </div>
+            
+            <div className="max-w-md">
+              <label className="block text-lg font-medium text-gray-700 mb-3">
+                Minimum Passing Score (%) *
+              </label>
+              <input
+                name="minPassingScore"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.minPassingScore}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 text-lg border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                  errors.minPassingScore ? 'border-red-500' : 'border-gray-300'
+                }`}
+                required
+              />
+              {errors.minPassingScore && <p className="mt-2 text-sm text-red-600">{errors.minPassingScore}</p>}
+              <p className="mt-2 text-sm text-gray-600">Percentage score needed to pass this tournament</p>
+            </div>
+          </div>
+
+          {/* Information Box */}
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Info className="h-6 w-6 text-blue-400" />
+              </div>
+              <div className="ml-3">
+                <h4 className="text-lg font-medium text-blue-800">Tournament Creation Notes</h4>
+                <div className="mt-2 text-blue-700">
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>10 questions will be automatically generated from an external quiz API</li>
+                    <li>Questions will be multiple choice with 4 options each</li>
+                    <li>Players can only attempt each tournament once</li>
+                    <li>Tournament dates can be modified after creation if needed</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Error Display */}
+          {errors.submit && (
+            <div className="p-4 bg-red-100 border-l-4 border-red-400 text-red-700 rounded-lg mb-6">
+              <div className="flex">
+                <div className="ml-3">
+                  <p className="text-lg font-medium">Error</p>
+                  <p className="mt-1">{errors.submit}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-4 pt-8 border-t">
+            <Button type="button" variant="secondary" size="lg" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmit} 
+              disabled={loading} 
+              size="lg" 
+              className="px-8"
+            >
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  {isEditing ? 'Updating...' : 'Creating...'}
+                </div>
+              ) : (
+                <>
+                  <Trophy className="h-5 w-5 mr-2" />
+                  {isEditing ? 'Update Tournament' : 'Create Tournament'}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Creator *"
-          name="creator"
-          value={formData.creator}
-          onChange={handleChange}
-          placeholder="Enter creator name"
-          error={errors.creator}
-          required
-        />
-
-        <Input
-          label="Tournament Name *"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="Enter tournament name"
-          error={errors.name}
-          required
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category *
-            </label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              {CATEGORIES.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Difficulty *
-            </label>
-            <select
-              name="difficulty"
-              value={formData.difficulty}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              {DIFFICULTY_LEVELS.map(level => (
-                <option key={level} value={level}>{level}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Start Date *"
-            name="startDate"
-            type="date"
-            value={formData.startDate}
-            onChange={handleChange}
-            error={errors.startDate}
-            required
-          />
-
-          <Input
-            label="End Date *"
-            name="endDate"
-            type="date"
-            value={formData.endDate}
-            onChange={handleChange}
-            error={errors.endDate}
-            required
-          />
-        </div>
-
-        <Input
-          label="Minimum Passing Score (%) *"
-          name="minPassingScore"
-          type="number"
-          min="0"
-          max="100"
-          value={formData.minPassingScore}
-          onChange={handleChange}
-          error={errors.minPassingScore}
-          required
-        />
-
-        {errors.submit && (
-          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-            {errors.submit}
-          </div>
-        )}
-
-        <div className="flex space-x-3 pt-4">
-          <Button type="submit" disabled={loading} className="flex-1">
-            {loading ? 
-              (isEditing ? 'Updating...' : 'Creating...') : 
-              (isEditing ? 'Update Tournament' : 'Create Tournament')
-            }
-          </Button>
-          <Button type="button" variant="secondary" onClick={onCancel}>
-            Cancel
-          </Button>
-        </div>
-      </form>
     </div>
   );
 };

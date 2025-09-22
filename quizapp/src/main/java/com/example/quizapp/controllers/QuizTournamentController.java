@@ -1,7 +1,9 @@
 package com.example.quizapp.controllers;
 
+import com.example.quizapp.db.TournamentQuestionRepository;
 import com.example.quizapp.dto.ScoreboardResponse;
 import com.example.quizapp.model.QuizTournament;
+import com.example.quizapp.model.TournamentQuestion;
 import com.example.quizapp.services.QuizTournamentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,10 +19,12 @@ import java.util.Map;
 public class QuizTournamentController {
 
     private final QuizTournamentService service;
+    private TournamentQuestionRepository tqRepo;
 
-    public QuizTournamentController(QuizTournamentService service) {
+    public QuizTournamentController(QuizTournamentService service, TournamentQuestionRepository tqRepo) {
         // Here I add constructor injection for tournament service
         this.service = service;
+        this.tqRepo = tqRepo;
     }
 
     private String getCurrentRole() {
@@ -88,16 +92,15 @@ public class QuizTournamentController {
         }
     }
 
-    // Enhanced delete with confirmation requirement
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id, @RequestParam(required = false) String confirm) {
-        // Here I add role check to restrict deletion to admins
+        // Check role
         String role = getCurrentRole();
         if (!"ADMIN".equals(role)) {
             return ResponseEntity.status(403).body("Access denied: Admins only");
         }
 
-        // Here I add confirmation check before deletion
+        // Check confirmation
         if (!"yes".equalsIgnoreCase(confirm)) {
             return ResponseEntity.badRequest().body(Map.of(
                     "message", "Deletion requires confirmation",
@@ -107,11 +110,44 @@ public class QuizTournamentController {
         }
 
         try {
-            // Here I add logic to delete tournament and related data
+            // Check if tournament exists first
+            QuizTournament tournament = service.getAllTournaments().stream()
+                    .filter(t -> t.getId().equals(id))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Tournament not found"));
+
+            String tournamentName = tournament.getName();
+
+            // Delete the tournament
             service.deleteTournament(id);
-            return ResponseEntity.ok("Tournament deleted successfully");
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Tournament '" + tournamentName + "' deleted successfully",
+                    "deletedId", id
+            ));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "error", e.getMessage()
+            ));
+        }
+    }
+
+    @GetMapping("/{tournamentId}/questions")
+    public ResponseEntity<?> getTournamentQuestionsForAdmin(@PathVariable Long tournamentId) {
+        // Admin-only endpoint for viewing tournament questions
+        String role = getCurrentRole();
+        if (!"ADMIN".equals(role)) {
+            return ResponseEntity.status(403).body("Access denied: Admins only");
+        }
+
+        try {
+            // Use the tournament question repository directly
+            List<TournamentQuestion> questions = tqRepo.findByTournamentId(tournamentId);
+            return ResponseEntity.ok(questions);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error fetching questions: " + e.getMessage());
         }
     }
 

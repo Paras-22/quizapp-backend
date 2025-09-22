@@ -61,6 +61,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/tournaments/**").authenticated()
                         .requestMatchers("/users/stats", "/users/profile").authenticated()
 
+                        .requestMatchers(HttpMethod.GET, "/player/tournament/*/questions").authenticated()
+
                         // Role check endpoints - any authenticated user can call
                         .requestMatchers("/users/is-admin/**", "/users/is-player/**").authenticated()
 

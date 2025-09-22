@@ -1,4 +1,4 @@
-// Complete AdminDashboard.js with all requirements implemented
+// Simplified AdminDashboard.js - removed view questions functionality
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
 import { Trophy, Users, Clock, Star, Plus, TrendingUp, Table, Grid } from 'lucide-react';
@@ -8,16 +8,13 @@ import StatsCard from '../ui/StatsCard';
 import TournamentForm from '../tournaments/TournamentForm';
 import TournamentTable from '../tournaments/TournamentTable';
 import TournamentList from '../tournaments/TournamentList';
-import QuestionsViewerModal from '../tournaments/QuestionsViewerModal';
 
 const AdminDashboard = () => {
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [showQuestionsModal, setShowQuestionsModal] = useState(false);
   const [editingTournament, setEditingTournament] = useState(null);
-  const [selectedTournament, setSelectedTournament] = useState(null);
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
   const [stats, setStats] = useState({
     totalTournaments: 0,
@@ -67,22 +64,27 @@ const AdminDashboard = () => {
     setShowEditForm(true);
   };
 
-  const handleViewQuestions = (tournament) => {
-    setSelectedTournament(tournament);
-    setShowQuestionsModal(true);
-  };
-
   const handleDeleteTournament = async (id) => {
     const tournament = tournaments.find(t => t.id === id);
     const confirmMessage = `Are you sure you want to delete "${tournament?.name}"?\n\nThis action cannot be undone and will delete all related attempts and answers.`;
     
     if (window.confirm(confirmMessage)) {
       try {
-        await apiService.deleteTournament(id);
-        loadDashboardData();
+        setLoading(true);
+        const result = await apiService.deleteTournament(id);
+        
+        if (result && result.success) {
+          alert(result.message || 'Tournament deleted successfully!');
+        } else {
+          alert('Tournament deleted successfully!');
+        }
+        
+        await loadDashboardData();
       } catch (error) {
         console.error('Error deleting tournament:', error);
-        alert('Failed to delete tournament. Please try again.');
+        alert(`Failed to delete tournament: ${error.message || 'Please try again.'}`);
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -183,16 +185,6 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Questions Viewer Modal */}
-      <QuestionsViewerModal
-        tournament={selectedTournament}
-        isOpen={showQuestionsModal}
-        onClose={() => {
-          setShowQuestionsModal(false);
-          setSelectedTournament(null);
-        }}
-      />
-
       {/* Main Content - Tournaments Section */}
       <Card>
         <div className="flex justify-between items-center mb-4">
@@ -208,8 +200,8 @@ const AdminDashboard = () => {
             tournaments={tournaments}
             onEdit={handleEditTournament}
             onDelete={handleDeleteTournament}
-            onViewQuestions={handleViewQuestions}
             loading={loading}
+            showViewQuestions={false}
           />
         ) : (
           <TournamentList 
@@ -217,7 +209,7 @@ const AdminDashboard = () => {
             isAdmin={true}
             onDelete={handleDeleteTournament}
             onEdit={handleEditTournament}
-            onViewQuestions={handleViewQuestions}
+            showViewQuestions={false}
           />
         )}
 

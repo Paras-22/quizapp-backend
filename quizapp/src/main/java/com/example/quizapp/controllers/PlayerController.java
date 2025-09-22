@@ -196,18 +196,28 @@ public class PlayerController {
         }
     }
 
+
     @GetMapping("/tournament/{tournamentId}/questions")
     public ResponseEntity<?> getTournamentQuestions(@PathVariable Long tournamentId) {
-        // Here I add role check to restrict access to players only
+        // Allow both ADMIN and PLAYER to view tournament questions
         String role = getCurrentRole();
-        if (!"PLAYER".equals(role)) {
-            return ResponseEntity.status(403).body("Access denied: Players only");
-        }
-        // Here I add logic to fetch all questions for a tournament
-        List<TournamentQuestion> questions = service.getTournamentQuestions(tournamentId);
-        return ResponseEntity.ok(questions);
-    }
+        System.out.println("DEBUG - Role check: " + role); // Add debug log
 
+        if (!"PLAYER".equals(role) && !"ADMIN".equals(role)) {
+            System.out.println("DEBUG - Access denied for role: " + role);
+            return ResponseEntity.status(403).body("Access denied: Players and Admins only. Current role: " + role);
+        }
+
+        try {
+            System.out.println("DEBUG - Fetching questions for tournament: " + tournamentId);
+            List<TournamentQuestion> questions = service.getTournamentQuestions(tournamentId);
+            System.out.println("DEBUG - Found " + questions.size() + " questions");
+            return ResponseEntity.ok(questions);
+        } catch (RuntimeException e) {
+            System.out.println("DEBUG - Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
     @GetMapping("/attempt/{attemptId}/answers")
     public ResponseEntity<?> getAttemptAnswers(@PathVariable Long attemptId) {
         String role = getCurrentRole();

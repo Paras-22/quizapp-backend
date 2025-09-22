@@ -41,12 +41,19 @@ export const apiService = {
     return handleResponse(response);
   },
 
+ 
   async deleteTournament(id) {
     const response = await fetch(`${API_BASE_URL}/tournaments/${id}?confirm=yes`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
-    return handleResponse(response);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Failed to delete tournament`);
+    }
+    
+    return response.json();
   },
 
   async likeTournament(id) {
@@ -63,6 +70,28 @@ export const apiService = {
     });
     return handleResponse(response);
   },
+
+  async getTournamentQuestions(tournamentId) {
+    // Try admin endpoint first, fall back to player endpoint
+    const user = JSON.parse(localStorage.getItem('user'));
+    let endpoint;
+    
+    if (user && user.role === 'ADMIN') {
+        endpoint = `${API_BASE_URL}/tournaments/${tournamentId}/questions`;
+    } else {
+        endpoint = `${API_BASE_URL}/player/tournament/${tournamentId}/questions`;
+    }
+    
+    const response = await fetch(endpoint, {
+        headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+        throw new Error(`Failed to fetch tournament questions: ${response.status}`);
+    }
+    
+    return response.json();
+},
 
   // Player APIs
   async startTournament(id) {
@@ -111,7 +140,12 @@ export const apiService = {
     const response = await fetch(`${API_BASE_URL}/player/tournament/${tournamentId}/questions`, {
       headers: getAuthHeaders()
     });
-    return handleResponse(response);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch tournament questions: ${response.status}`);
+    }
+    
+    return response.json();
   },
 
   async submitAnswer(data) {
@@ -179,6 +213,7 @@ async getAttemptAnswers(attemptId) {
   });
   return handleResponse(response);
 },
+
 
   // Additional methods for better error handling
   async testConnection() {

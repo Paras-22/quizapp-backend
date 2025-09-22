@@ -1,13 +1,12 @@
-// TournamentTable.js - Table view for admin dashboard
+// TournamentTable.js - Simplified without view questions functionality
 import React, { useState } from 'react';
-import { Eye, Edit2, Trash2, Star } from 'lucide-react';
+import { Edit2, Trash2, Star } from 'lucide-react';
 import Button from '../ui/Button';
 
 const TournamentTable = ({ 
   tournaments, 
   onEdit, 
-  onDelete, 
-  onViewQuestions,
+  onDelete,
   loading = false 
 }) => {
   const [sortField, setSortField] = useState('name');
@@ -112,12 +111,9 @@ const TournamentTable = ({
                   {tournament.creator || 'Unknown'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <button
-                    onClick={() => onViewQuestions(tournament)}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                  >
+                  <div className="text-sm font-medium text-gray-900">
                     {tournament.name}
-                  </button>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {tournament.category}
@@ -151,16 +147,9 @@ const TournamentTable = ({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onViewQuestions(tournament)}
-                      className="p-1"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
                       onClick={() => onEdit(tournament)}
                       className="p-1"
+                      title="Edit Tournament"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -169,6 +158,7 @@ const TournamentTable = ({
                       variant="danger"
                       onClick={() => onDelete(tournament.id)}
                       className="p-1"
+                      title="Delete Tournament"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

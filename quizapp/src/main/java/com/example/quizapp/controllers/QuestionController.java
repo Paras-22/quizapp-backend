@@ -25,9 +25,9 @@ public class QuestionController {
 
         String authority = auth.getAuthorities().iterator().next().getAuthority();
 
-        // Remove ROLE_ prefix if present (Spring Security adds this automatically)
+
         if (authority.startsWith("ROLE_")) {
-            return authority.substring(5); // Returns "ADMIN" instead of "ROLE_ADMIN"
+            return authority.substring(5);
         }
         return authority;
     }

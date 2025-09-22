@@ -1,28 +1,15 @@
-// src/components/tournaments/TournamentCard.js
+// TournamentCard.js - Simplified version for admin with only edit and delete
 import React from 'react';
-import { Calendar, Star, Play, Trophy, Clock } from 'lucide-react';
+import { Calendar, Star, Trophy, Clock, Edit2, Trash2 } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 
 const TournamentCard = ({ 
   tournament, 
-  onStart, 
-  onLike, 
+  onEdit,
   onDelete, 
-  isAdmin, 
-  userAttempts = [] 
+  isAdmin
 }) => {
-  const hasAttempted = userAttempts.some(
-    attempt => attempt.tournament.id === tournament.id
-  );
-  
-  const isOngoing = () => {
-    const now = new Date();
-    const startDate = new Date(tournament.startDate);
-    const endDate = new Date(tournament.endDate);
-    return startDate <= now && endDate >= now;
-  };
-
   const getStatusBadge = () => {
     const now = new Date();
     const startDate = new Date(tournament.startDate);
@@ -42,7 +29,7 @@ const TournamentCard = ({
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 overflow-hidden">
+            <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
               {tournament.name}
             </h3>
             {getStatusBadge()}
@@ -60,6 +47,9 @@ const TournamentCard = ({
               <Clock className="h-4 w-4 mr-1" />
               Passing Score: {tournament.minPassingScore}%
             </p>
+            <p className="text-xs text-gray-500">
+              Created by: {tournament.creator || 'Unknown'}
+            </p>
           </div>
         </div>
         
@@ -69,41 +59,30 @@ const TournamentCard = ({
         </div>
       </div>
       
-      <div className="flex space-x-2 mt-4">
-        {!isAdmin && (
-          <>
-            <Button 
-              size="sm" 
-              onClick={() => onStart && onStart(tournament.id)}
-              disabled={hasAttempted || !isOngoing()}
-              variant={hasAttempted ? 'secondary' : 'primary'}
-              className="flex-1"
-            >
-              <Play className="h-4 w-4 mr-1" />
-              {hasAttempted ? 'Completed' : isOngoing() ? 'Start Quiz' : 'Not Available'}
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => onLike && onLike(tournament.id)}
-              className="px-3"
-            >
-              <Star className="h-4 w-4" />
-            </Button>
-          </>
-        )}
-        
-        {isAdmin && (
+      {isAdmin && (
+        <div className="flex space-x-2 mt-4">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => onEdit && onEdit(tournament)}
+            className="flex-1"
+            title="Edit Tournament"
+          >
+            <Edit2 className="h-4 w-4 mr-1" />
+            Edit
+          </Button>
           <Button 
             size="sm" 
             variant="danger" 
             onClick={() => onDelete && onDelete(tournament.id)}
             className="flex-1"
+            title="Delete Tournament"
           >
+            <Trash2 className="h-4 w-4 mr-1" />
             Delete
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </Card>
   );
 };
