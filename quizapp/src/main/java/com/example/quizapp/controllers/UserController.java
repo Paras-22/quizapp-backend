@@ -95,7 +95,7 @@ public class UserController {
         return ResponseEntity.ok("Logged out successfully. Please discard your token.");
     }
 
-    // FIXED: Updated profile update method to handle partial updates
+    // Updated profile update method to handle partial updates
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> profileUpdates) {
         String currentUsername = getCurrentUsername();
@@ -218,7 +218,7 @@ public class UserController {
         return userResponse;
     }
 
-    // FIXED: Add change password endpoint
+    // Add change password endpoint
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestBody Map<String, String> passwordData) {
         String currentUsername = getCurrentUsername();
@@ -275,7 +275,7 @@ public class UserController {
         return ResponseEntity.ok("If the email exists, password reset instructions have been sent");
     }
 
-    // NEW: Password reset page endpoint (fixes the 403 error)
+    // Password reset page endpoint (fixes the 403 error)
     @GetMapping("/reset-password")
     public ResponseEntity<?> showPasswordResetPage(@RequestParam String token) {
         String html = """
@@ -323,7 +323,7 @@ public class UserController {
                 .body(html);
     }
 
-    // NEW: Actual password reset endpoint
+    // Actual password reset endpoint
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
         String token = request.get("token");
