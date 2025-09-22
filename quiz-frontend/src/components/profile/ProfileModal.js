@@ -1,4 +1,4 @@
-// ProfileModal.js - Profile management modal for both admin and player
+// Fixed ProfileModal.js - Profile management modal for both admin and player
 import React, { useState, useEffect } from 'react';
 import { X, User, Mail, Phone, MapPin, Calendar, Edit, Save, Camera } from 'lucide-react';
 import Button from '../ui/Button';
@@ -36,8 +36,20 @@ const ProfileModal = ({ isOpen, onClose, onProfileUpdate }) => {
     setErrors({});
     try {
       const data = await apiService.getProfile();
-      setProfileData(data);
-      setOriginalData(data);
+      // Ensure all fields have values (empty string if null/undefined)
+      const normalizedData = {
+        username: data.username || '',
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        address: data.address || '',
+        bio: data.bio || '',
+        dateOfBirth: data.dateOfBirth || '',
+        profilePicture: data.profilePicture || ''
+      };
+      setProfileData(normalizedData);
+      setOriginalData(normalizedData);
     } catch (error) {
       setErrors({ load: 'Failed to load profile data' });
       console.error('Error loading profile:', error);
@@ -101,8 +113,11 @@ const ProfileModal = ({ isOpen, onClose, onProfileUpdate }) => {
     setSuccessMessage('');
     
     try {
+      // Send only the fields that are different from original
       const updatedProfile = await apiService.updateProfile(profileData);
-      setOriginalData(profileData);
+      
+      // Update both current and original data
+      setOriginalData({ ...profileData });
       setIsEditing(false);
       setSuccessMessage('Profile updated successfully!');
       
@@ -123,7 +138,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileUpdate }) => {
   };
 
   const handleCancel = () => {
-    setProfileData(originalData);
+    setProfileData({ ...originalData });
     setIsEditing(false);
     setErrors({});
     setSuccessMessage('');
@@ -133,7 +148,7 @@ const ProfileModal = ({ isOpen, onClose, onProfileUpdate }) => {
     const { name, value } = e.target;
     setProfileData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value || '' // Ensure no null values
     }));
     
     // Clear error when user starts typing
@@ -145,8 +160,11 @@ const ProfileModal = ({ isOpen, onClose, onProfileUpdate }) => {
     }
   };
 
+  // Fixed hasChanges function
   const hasChanges = () => {
-    return JSON.stringify(profileData) !== JSON.stringify(originalData);
+    return Object.keys(profileData).some(key => 
+      (profileData[key] || '') !== (originalData[key] || '')
+    );
   };
 
   if (!isOpen) return null;

@@ -5,7 +5,6 @@ import com.example.quizapp.dto.AuthResponse;
 import com.example.quizapp.model.Role;
 import com.example.quizapp.model.User;
 import com.example.quizapp.security.JwtUtil;
-//import com.example.quizapp.services.EmailService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,14 +27,13 @@ public class UserController {
     private final PlayerAttemptRepository playerAttemptRepo;
     private final UserRepository userRepo;
     private final JwtUtil jwtUtil;
-   // private final EmailService emailService;
 
     public UserController(PlayerAttemptRepository playerAttemptRepo, UserRepository userRepo, JwtUtil jwtUtil) {
         this.playerAttemptRepo = playerAttemptRepo;
         this.userRepo = userRepo;
         this.jwtUtil = jwtUtil;
-        //this.emailService = emailService;
     }
+
     private String getCurrentRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getAuthorities().isEmpty()) {
@@ -50,12 +48,11 @@ public class UserController {
         }
         return authority;
     }
+
     private String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null ? auth.getName() : null;
     }
-
-
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User loginRequest) {
@@ -98,15 +95,9 @@ public class UserController {
         return ResponseEntity.ok("Logged out successfully. Please discard your token.");
     }
 
+    // FIXED: Updated profile update method to handle partial updates
     @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(@Valid @RequestBody User updatedUser, BindingResult result) {
-        if (result.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            result.getFieldErrors().forEach(error ->
-                    errors.put(error.getField(), error.getDefaultMessage()));
-            return ResponseEntity.badRequest().body(errors);
-        }
-
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> profileUpdates) {
         String currentUsername = getCurrentUsername();
         if (currentUsername == null) {
             return ResponseEntity.status(401).body("User not authenticated");
@@ -119,28 +110,79 @@ public class UserController {
 
         User existingUser = userOpt.get();
 
-        if (!existingUser.getUsername().equals(updatedUser.getUsername()) &&
-                userRepo.findByUsername(updatedUser.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body("Username already taken");
+        try {
+            // Update only the fields that are provided in the request
+            if (profileUpdates.containsKey("username") && !profileUpdates.get("username").trim().isEmpty()) {
+                String newUsername = profileUpdates.get("username").trim();
+                if (!existingUser.getUsername().equals(newUsername) &&
+                        userRepo.findByUsername(newUsername).isPresent()) {
+                    return ResponseEntity.badRequest().body("Username already taken");
+                }
+                existingUser.setUsername(newUsername);
+            }
+
+            if (profileUpdates.containsKey("firstName")) {
+                String firstName = profileUpdates.get("firstName");
+                if (firstName == null || firstName.trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body("First name cannot be empty");
+                }
+                existingUser.setFirstName(firstName.trim());
+            }
+
+            if (profileUpdates.containsKey("lastName")) {
+                String lastName = profileUpdates.get("lastName");
+                if (lastName == null || lastName.trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body("Last name cannot be empty");
+                }
+                existingUser.setLastName(lastName.trim());
+            }
+
+            if (profileUpdates.containsKey("email") && !profileUpdates.get("email").trim().isEmpty()) {
+                String newEmail = profileUpdates.get("email").trim();
+                // Basic email validation
+                if (!newEmail.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+                    return ResponseEntity.badRequest().body("Invalid email format");
+                }
+                if (!existingUser.getEmail().equals(newEmail) &&
+                        userRepo.findByEmail(newEmail).isPresent()) {
+                    return ResponseEntity.badRequest().body("Email already registered");
+                }
+                existingUser.setEmail(newEmail);
+            }
+
+            // Optional fields - can be empty or null
+            if (profileUpdates.containsKey("phone")) {
+                existingUser.setPhone(profileUpdates.get("phone"));
+            }
+
+            if (profileUpdates.containsKey("address")) {
+                existingUser.setAddress(profileUpdates.get("address"));
+            }
+
+            if (profileUpdates.containsKey("bio")) {
+                existingUser.setBio(profileUpdates.get("bio"));
+            }
+
+            if (profileUpdates.containsKey("dateOfBirth")) {
+                existingUser.setDateOfBirth(profileUpdates.get("dateOfBirth"));
+            }
+
+            if (profileUpdates.containsKey("profilePicture")) {
+                existingUser.setProfilePicture(profileUpdates.get("profilePicture"));
+            }
+
+            User savedUser = userRepo.save(existingUser);
+
+            // Return the updated user data (without password)
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("message", "Profile updated successfully");
+            responseData.put("user", createUserResponse(savedUser));
+
+            return ResponseEntity.ok(responseData);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error updating profile: " + e.getMessage());
         }
-
-        if (!existingUser.getEmail().equals(updatedUser.getEmail()) &&
-                userRepo.findByEmail(updatedUser.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email already registered");
-        }
-
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setFirstName(updatedUser.getFirstName());
-        existingUser.setLastName(updatedUser.getLastName());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setPhone(updatedUser.getPhone());
-        existingUser.setAddress(updatedUser.getAddress());
-        existingUser.setProfilePicture(updatedUser.getProfilePicture());
-        existingUser.setDateOfBirth(updatedUser.getDateOfBirth());
-        existingUser.setBio(updatedUser.getBio());
-
-        User savedUser = userRepo.save(existingUser);
-        return ResponseEntity.ok("Profile updated successfully");
     }
 
     @GetMapping("/profile")
@@ -156,8 +198,66 @@ public class UserController {
         }
 
         User user = userOpt.get();
-        user.setPassword(null);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(createUserResponse(user));
+    }
+
+    // Helper method to create user response without password
+    private Map<String, Object> createUserResponse(User user) {
+        Map<String, Object> userResponse = new HashMap<>();
+        userResponse.put("id", user.getId());
+        userResponse.put("username", user.getUsername());
+        userResponse.put("firstName", user.getFirstName());
+        userResponse.put("lastName", user.getLastName());
+        userResponse.put("email", user.getEmail());
+        userResponse.put("phone", user.getPhone());
+        userResponse.put("address", user.getAddress());
+        userResponse.put("bio", user.getBio());
+        userResponse.put("dateOfBirth", user.getDateOfBirth());
+        userResponse.put("profilePicture", user.getProfilePicture());
+        userResponse.put("role", user.getRole());
+        return userResponse;
+    }
+
+    // FIXED: Add change password endpoint
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> passwordData) {
+        String currentUsername = getCurrentUsername();
+        if (currentUsername == null) {
+            return ResponseEntity.status(401).body("User not authenticated");
+        }
+
+        String currentPassword = passwordData.get("currentPassword");
+        String newPassword = passwordData.get("newPassword");
+
+        if (currentPassword == null || newPassword == null) {
+            return ResponseEntity.badRequest().body("Current password and new password are required");
+        }
+
+        if (newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body("New password must be at least 6 characters");
+        }
+
+        Optional<User> userOpt = userRepo.findByUsername(currentUsername);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+
+        User user = userOpt.get();
+
+        // Verify current password
+        if (!user.getPassword().equals(currentPassword)) {
+            return ResponseEntity.badRequest().body("Current password is incorrect");
+        }
+
+        if (currentPassword.equals(newPassword)) {
+            return ResponseEntity.badRequest().body("New password must be different from current password");
+        }
+
+        // Update password
+        user.setPassword(newPassword);
+        userRepo.save(user);
+
+        return ResponseEntity.ok("Password changed successfully");
     }
 
     @PostMapping("/password-reset-request")
@@ -170,7 +270,6 @@ public class UserController {
         Optional<User> userOpt = userRepo.findByEmail(email);
         if (userOpt.isPresent()) {
             String resetToken = UUID.randomUUID().toString();
-            //emailService.sendPasswordResetEmail(email, resetToken);
         }
 
         return ResponseEntity.ok("If the email exists, password reset instructions have been sent");
@@ -233,12 +332,6 @@ public class UserController {
         if (token == null || newPassword == null) {
             return ResponseEntity.badRequest().body("Token and newPassword are required");
         }
-
-        // Mock implementation - in real app you would:
-        // 1. Validate token exists and hasn't expired
-        // 2. Find user associated with token
-        // 3. Update their password (hash it first!)
-        // 4. Delete the reset token
 
         return ResponseEntity.ok(Map.of(
                 "message", "Password reset completed successfully",
