@@ -1,15 +1,18 @@
-// TournamentCard.js - Simplified version for admin with only edit and delete
+// TournamentCard.js
+
 import React from 'react';
 import { Calendar, Star, Trophy, Clock, Edit2, Trash2 } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 
 const TournamentCard = ({ 
-  tournament, 
-  onEdit,
-  onDelete, 
-  isAdmin
+  tournament,       // Tournament data object
+  onEdit,           // Callback for editing tournament
+  onDelete,         // Callback for deleting tournament
+  isAdmin           // Flag to show admin controls
 }) => {
+
+  // Determine tournament status based on current date
   const getStatusBadge = () => {
     const now = new Date();
     const startDate = new Date(tournament.startDate);
@@ -26,6 +29,7 @@ const TournamentCard = ({
 
   return (
     <Card className="h-full transform transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+      {/* Header section with title and status */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">
@@ -34,6 +38,8 @@ const TournamentCard = ({
             </h3>
             {getStatusBadge()}
           </div>
+
+          {/* Tournament details */}
           <div className="space-y-1 text-sm text-gray-600">
             <p className="flex items-center">
               <Trophy className="h-4 w-4 mr-1" />
@@ -52,13 +58,15 @@ const TournamentCard = ({
             </p>
           </div>
         </div>
-        
+
+        {/* Likes count */}
         <div className="flex items-center space-x-1 ml-4">
           <Star className="h-4 w-4 text-yellow-500" />
           <span className="text-sm text-gray-600">{tournament.likes || 0}</span>
         </div>
       </div>
-      
+
+      {/* Admin controls: Edit and Delete buttons */}
       {isAdmin && (
         <div className="flex space-x-2 mt-4">
           <Button 

@@ -1,17 +1,20 @@
-// TournamentTable.js - Simplified without view questions functionality
+// TournamentTable.js 
+
 import React, { useState } from 'react';
 import { Edit2, Trash2, Star } from 'lucide-react';
 import Button from '../ui/Button';
 
 const TournamentTable = ({ 
-  tournaments, 
-  onEdit, 
-  onDelete,
-  loading = false 
+  tournaments,     // Array of tournament objects
+  onEdit,          // Callback for editing a tournament
+  onDelete,        // Callback for deleting a tournament
+  loading = false  // Flag to show loading spinner
 }) => {
+  // State for sorting field and direction
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
 
+  // Toggle sorting direction or change sort field
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -21,25 +24,28 @@ const TournamentTable = ({
     }
   };
 
+  // Sort tournaments based on selected field and direction
   const sortedTournaments = [...tournaments].sort((a, b) => {
     let aValue = a[sortField];
     let bValue = b[sortField];
-    
+
+    // Convert date fields to Date objects for comparison
     if (sortField === 'startDate' || sortField === 'endDate') {
       aValue = new Date(aValue);
       bValue = new Date(bValue);
     }
-    
+
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
     return 0;
   });
 
+  // Determine tournament status badge based on current date
   const getStatusBadge = (tournament) => {
     const now = new Date();
     const startDate = new Date(tournament.startDate);
     const endDate = new Date(tournament.endDate);
-    
+
     if (startDate > now) {
       return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Upcoming</span>;
     } else if (endDate < now) {
@@ -49,6 +55,7 @@ const TournamentTable = ({
     }
   };
 
+  // Reusable sortable header component
   const SortableHeader = ({ field, children }) => (
     <th 
       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -65,6 +72,7 @@ const TournamentTable = ({
     </th>
   );
 
+  // Show loading spinner if data is being fetched
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -73,6 +81,7 @@ const TournamentTable = ({
     );
   }
 
+  // Show fallback message if no tournaments are available
   if (tournaments.length === 0) {
     return (
       <div className="text-center py-8">
@@ -81,6 +90,7 @@ const TournamentTable = ({
     );
   }
 
+  // Render tournament table
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -107,17 +117,24 @@ const TournamentTable = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {sortedTournaments.map((tournament) => (
               <tr key={tournament.id} className="hover:bg-gray-50">
+                {/* Creator */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {tournament.creator || 'Unknown'}
                 </td>
+
+                {/* Name */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
                     {tournament.name}
                   </div>
                 </td>
+
+                {/* Category */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {tournament.category}
                 </td>
+
+                {/* Difficulty with color-coded badge */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <span className={`px-2 py-1 text-xs rounded-full ${
                     tournament.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
@@ -127,21 +144,29 @@ const TournamentTable = ({
                     {tournament.difficulty}
                   </span>
                 </td>
+
+                {/* Start and End Dates */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {new Date(tournament.startDate).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {new Date(tournament.endDate).toLocaleDateString()}
                 </td>
+
+                {/* Status Badge */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   {getStatusBadge(tournament)}
                 </td>
+
+                {/* Likes */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <div className="flex items-center">
                     <Star className="h-4 w-4 text-yellow-500 mr-1" />
                     {tournament.likes || 0}
                   </div>
                 </td>
+
+                {/* Edit/Delete Actions */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex space-x-2">
                     <Button

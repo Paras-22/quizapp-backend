@@ -1,4 +1,5 @@
-// src/components/tournaments/QuizPlayer.js
+// QuizPlayer.js - Component for playing a quiz tournament
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../../services/api';
@@ -7,11 +8,13 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 
 const QuizPlayer = () => {
+  // Get tournament ID from URL and attempt ID from navigation state
   const { tournamentId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const attemptId = location.state?.attemptId;
 
+  // State variables for quiz logic
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -21,14 +24,17 @@ const QuizPlayer = () => {
   const [submitting, setSubmitting] = useState(false);
   const [score, setScore] = useState(0);
 
+  // Load questions when component mounts
   useEffect(() => {
     if (!attemptId) {
+      // Redirect if no attempt ID is found
       navigate('/dashboard');
       return;
     }
     loadQuestions();
   }, [tournamentId, attemptId]);
 
+  // Fetch tournament questions from API
   const loadQuestions = async () => {
     try {
       const data = await apiService.getTournamentQuestions(tournamentId);
@@ -41,6 +47,7 @@ const QuizPlayer = () => {
     }
   };
 
+  // Handle answer selection
   const handleAnswerSelect = (selectedAnswer) => {
     setAnswers({
       ...answers,
@@ -48,6 +55,7 @@ const QuizPlayer = () => {
     });
   };
 
+  // Submit selected answer to API and show feedback
   const handleSubmitAnswer = async () => {
     const selectedAnswer = answers[currentQuestionIndex];
     if (!selectedAnswer) return;
@@ -65,7 +73,7 @@ const QuizPlayer = () => {
         setScore(prev => prev + 1);
       }
 
-      // Auto-advance after showing feedback
+      // Automatically move to next question or finish quiz
       setTimeout(() => {
         if (currentQuestionIndex < questions.length - 1) {
           setCurrentQuestionIndex(prev => prev + 1);
@@ -81,6 +89,7 @@ const QuizPlayer = () => {
     }
   };
 
+  // Mark quiz as finished
   const finishQuiz = async () => {
     try {
       await apiService.finishTournament(attemptId);
@@ -90,6 +99,7 @@ const QuizPlayer = () => {
     }
   };
 
+  // Show loading spinner while fetching questions
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-96">
@@ -98,6 +108,7 @@ const QuizPlayer = () => {
     );
   }
 
+  // Show completion screen when quiz is finished
   if (isFinished) {
     return (
       <div className="max-w-2xl mx-auto px-4">
@@ -118,11 +129,13 @@ const QuizPlayer = () => {
     );
   }
 
+  // Get current question and selected answer
   const currentQuestion = questions[currentQuestionIndex];
   const selectedAnswer = answers[currentQuestionIndex];
 
   return (
     <div className="max-w-4xl mx-auto px-4">
+      {/* Quiz header with progress and score */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Quiz Tournament</h1>
@@ -136,7 +149,8 @@ const QuizPlayer = () => {
             </div>
           </div>
         </div>
-        
+
+        {/* Progress bar */}
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
@@ -145,18 +159,20 @@ const QuizPlayer = () => {
         </div>
       </div>
 
+      {/* Question card */}
       {currentQuestion && (
         <Card>
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               {currentQuestion.question.questionText}
             </h2>
-            
+
+            {/* Answer options */}
             <div className="space-y-3">
               {['A', 'B', 'C', 'D'].map(option => {
                 const optionText = currentQuestion.question[`option${option}`];
                 const isSelected = selectedAnswer === option;
-                
+
                 return (
                   <button
                     key={option}
@@ -176,6 +192,7 @@ const QuizPlayer = () => {
             </div>
           </div>
 
+          {/* Feedback after answer submission */}
           {feedback && (
             <div className={`mb-6 p-4 rounded-lg ${
               feedback.isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -196,6 +213,7 @@ const QuizPlayer = () => {
             </div>
           )}
 
+          {/* Submit button */}
           {!feedback && (
             <Button
               onClick={handleSubmitAnswer}

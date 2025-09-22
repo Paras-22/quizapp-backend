@@ -1,4 +1,5 @@
 // PasswordChangeModal.js - Modal for changing password
+
 import React, { useState } from 'react';
 import { X, Lock, Eye, EyeOff } from 'lucide-react';
 import Button from '../ui/Button';
@@ -6,94 +7,107 @@ import Input from '../ui/Input';
 import { apiService } from '../../services/api';
 
 const PasswordChangeModal = ({ isOpen, onClose }) => {
+  // State to hold password input values
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-  
+
+  // State to toggle visibility of password fields
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false
   });
-  
+
+  // State for form validation errors
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Validate form inputs before submission
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!passwordData.currentPassword) {
       newErrors.currentPassword = 'Current password is required';
     }
-    
+
     if (!passwordData.newPassword) {
       newErrors.newPassword = 'New password is required';
     } else if (passwordData.newPassword.length < 6) {
       newErrors.newPassword = 'Password must be at least 6 characters';
     }
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-    
+
     if (passwordData.currentPassword === passwordData.newPassword) {
       newErrors.newPassword = 'New password must be different from current password';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setLoading(true);
     setErrors({});
-    
+
     try {
+      // Call API to change password
       await apiService.changePassword({
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
-      
+
+      // Show success message and reset form
       setSuccess(true);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      
+
+      // Close modal after short delay
       setTimeout(() => {
         setSuccess(false);
         onClose();
       }, 2000);
-      
+
     } catch (error) {
+      // Show error message if API call fails
       setErrors({ submit: 'Failed to change password. Please check your current password.' });
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle input changes and clear field-specific errors
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
-    
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
+  // Toggle password visibility for a specific field
   const togglePasswordVisibility = (field) => {
     setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
+  // Don't render modal if it's not open
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-md w-full">
+        {/* Modal Header */}
         <div className="border-b p-6 flex justify-between items-center">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-red-100 rounded-full">
@@ -109,7 +123,9 @@ const PasswordChangeModal = ({ isOpen, onClose }) => {
           </Button>
         </div>
 
+        {/* Modal Form */}
         <form onSubmit={handleSubmit} className="p-6">
+          {/* Success Message */}
           {success && (
             <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg mb-4">
               Password changed successfully!
@@ -117,6 +133,7 @@ const PasswordChangeModal = ({ isOpen, onClose }) => {
           )}
 
           <div className="space-y-4">
+            {/* Current Password Field */}
             <div className="relative">
               <Input
                 label="Current Password"
@@ -136,6 +153,7 @@ const PasswordChangeModal = ({ isOpen, onClose }) => {
               </button>
             </div>
 
+            {/* New Password Field */}
             <div className="relative">
               <Input
                 label="New Password"
@@ -155,6 +173,7 @@ const PasswordChangeModal = ({ isOpen, onClose }) => {
               </button>
             </div>
 
+            {/* Confirm Password Field */}
             <div className="relative">
               <Input
                 label="Confirm New Password"
@@ -174,6 +193,7 @@ const PasswordChangeModal = ({ isOpen, onClose }) => {
               </button>
             </div>
 
+            {/* Submission Error Message */}
             {errors.submit && (
               <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
                 {errors.submit}
@@ -181,6 +201,7 @@ const PasswordChangeModal = ({ isOpen, onClose }) => {
             )}
           </div>
 
+          {/* Action Buttons */}
           <div className="flex space-x-3 mt-6">
             <Button type="submit" disabled={loading} className="flex-1">
               {loading ? 'Changing...' : 'Change Password'}

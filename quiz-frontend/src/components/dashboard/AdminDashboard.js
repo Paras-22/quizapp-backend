@@ -1,4 +1,4 @@
-// Simplified AdminDashboard.js - removed view questions functionality
+// Simplified AdminDashboard.js 
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
 import { Trophy, Users, Clock, Star, Plus, TrendingUp, Table, Grid } from 'lucide-react';
@@ -227,7 +227,7 @@ const AdminDashboard = () => {
         )}
       </Card>
 
-      {/* Additional Analytics Section (Optional) */}
+      {/* Additional Analytics Section */}
       {tournaments.length > 0 && (
         <div className="mt-8">
           <Card>

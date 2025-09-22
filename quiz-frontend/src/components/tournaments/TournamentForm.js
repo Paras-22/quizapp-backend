@@ -1,4 +1,4 @@
-// Enhanced TournamentForm.js with larger, more spacious design
+// Enhanced TournamentForm.js 
 import React, { useState } from 'react';
 import { apiService } from '../../services/api';
 import { X, Trophy, Calendar, User, Settings, Info } from 'lucide-react';

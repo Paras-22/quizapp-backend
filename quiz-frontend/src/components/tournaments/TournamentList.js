@@ -8,7 +8,7 @@ const TournamentList = ({
   onStart, 
   onLike, 
   onDelete, 
-    onEdit,        // Add this
+    onEdit,       
   onViewQuestions,
   userAttempts 
 }) => {
