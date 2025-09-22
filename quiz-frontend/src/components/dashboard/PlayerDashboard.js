@@ -1,12 +1,12 @@
-// src/components/dashboard/PlayerDashboard.js
+// Updated PlayerDashboard.js with improved tournament cards
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
-import { Trophy, Play, Award, TrendingUp, Clock, Star } from 'lucide-react';
+import { Trophy, Award, TrendingUp, Star, Clock, Play } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import StatsCard from '../ui/StatsCard';
-import TournamentList from '../tournaments/TournamentList';
+import ImprovedTournamentCard from './ImprovedTournamentCard';
 import QuizReviewModal from '../tournaments/QuizReviewModal';
 
 const PlayerDashboard = () => {
@@ -21,67 +21,62 @@ const PlayerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [showReviewModal, setShowReviewModal] = useState(false);
-const [selectedAttempt, setSelectedAttempt] = useState(null);
+  const [selectedAttempt, setSelectedAttempt] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
-  
-
-const loadDashboardData = async () => {
-  try {
-    const [tournamentsData, attemptsData] = await Promise.all([
-      apiService.getTournaments(),
-      apiService.getMyAttempts()
-    ]);
-    
-    setTournaments(tournamentsData);
-    setAttempts(attemptsData);
-    
-    // Calculate stats from attempts data as fallback
-    const completedAttempts = attemptsData.filter(attempt => attempt.completed);
-    const fallbackStats = {
-      tournamentsPlayed: completedAttempts.length,
-      averageScore: completedAttempts.length > 0 
-        ? completedAttempts.reduce((sum, attempt) => sum + attempt.score, 0) / completedAttempts.length 
-        : 0,
-      bestScore: completedAttempts.length > 0 
-        ? Math.max(...completedAttempts.map(attempt => attempt.score)) 
-        : 0,
-      totalPoints: completedAttempts.reduce((sum, attempt) => sum + attempt.score, 0)
-    };
-    
-    // Try to get stats from backend, use fallback if fails
+  const loadDashboardData = async () => {
     try {
-      const statsData = await apiService.getPlayerStats();
-      setStats(statsData);
-    } catch (statsError) {
-      console.warn('Failed to load stats from backend, using calculated stats:', statsError);
-      setStats(fallbackStats);
+      const [tournamentsData, attemptsData] = await Promise.all([
+        apiService.getTournaments(),
+        apiService.getMyAttempts()
+      ]);
+      
+      setTournaments(tournamentsData);
+      setAttempts(attemptsData);
+      
+      const completedAttempts = attemptsData.filter(attempt => attempt.completed);
+      const fallbackStats = {
+        tournamentsPlayed: completedAttempts.length,
+        averageScore: completedAttempts.length > 0 
+          ? completedAttempts.reduce((sum, attempt) => sum + attempt.score, 0) / completedAttempts.length 
+          : 0,
+        bestScore: completedAttempts.length > 0 
+          ? Math.max(...completedAttempts.map(attempt => attempt.score)) 
+          : 0,
+        totalPoints: completedAttempts.reduce((sum, attempt) => sum + attempt.score, 0)
+      };
+      
+      try {
+        const statsData = await apiService.getPlayerStats();
+        setStats(statsData);
+      } catch (statsError) {
+        console.warn('Failed to load stats from backend, using calculated stats:', statsError);
+        setStats(fallbackStats);
+      }
+      
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      setStats({
+        tournamentsPlayed: 0,
+        averageScore: 0,
+        bestScore: 0,
+        totalPoints: 0
+      });
+    } finally {
+      setLoading(false);
     }
-    
-  } catch (error) {
-    console.error('Error loading dashboard data:', error);
-    // Set default values on complete failure
-    setStats({
-      tournamentsPlayed: 0,
-      averageScore: 0,
-      bestScore: 0,
-      totalPoints: 0
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
-const handleReviewQuiz = (tournament) => {
-  const attempt = attempts.find(a => 
-    a.tournament.id === tournament.id && a.completed
-  );
-  setSelectedAttempt(attempt);
-  setShowReviewModal(true);
-};
+  const handleReviewQuiz = (tournament) => {
+    const attempt = attempts.find(a => 
+      a.tournament.id === tournament.id && a.completed
+    );
+    setSelectedAttempt(attempt);
+    setShowReviewModal(true);
+  };
 
   const handleStartTournament = async (tournamentId) => {
     try {
@@ -96,7 +91,7 @@ const handleReviewQuiz = (tournament) => {
   const handleLikeTournament = async (tournamentId) => {
     try {
       await apiService.likeTournament(tournamentId);
-      loadDashboardData(); // Refresh to show updated likes
+      loadDashboardData();
     } catch (error) {
       console.error('Error liking tournament:', error);
     }
@@ -164,17 +159,25 @@ const handleReviewQuiz = (tournament) => {
         {/* Available Tournaments */}
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Available Tournaments</h2>
+            <div>
+              <h2 className="text-xl font-semibold">Available Tournaments</h2>
+              <p className="text-sm text-gray-600">{availableTournaments.length} tournaments ready to join</p>
+            </div>
             <Play className="h-5 w-5 text-green-600" />
           </div>
+          
           {availableTournaments.length > 0 ? (
-            <TournamentList 
-              tournaments={availableTournaments}
-              isAdmin={false}
-              onStart={handleStartTournament}
-              onLike={handleLikeTournament}
-              userAttempts={attempts}
-            />
+            <div className="space-y-6">
+              {availableTournaments.map(tournament => (
+                <ImprovedTournamentCard
+                  key={tournament.id}
+                  tournament={tournament}
+                  onStart={handleStartTournament}
+                  onLike={handleLikeTournament}
+                  userAttempts={attempts}
+                />
+              ))}
+            </div>
           ) : (
             <div className="text-center py-8">
               <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -186,72 +189,74 @@ const handleReviewQuiz = (tournament) => {
 
         {/* Completed Tournaments */}
         <Card>
-  <div className="flex items-center justify-between mb-4">
-    <h2 className="text-xl font-semibold">Completed Tournaments</h2>
-    <Award className="h-5 w-5 text-blue-600" />
-  </div>
-  {completedTournaments.length > 0 ? (
-    <div className="space-y-4">
-      {completedTournaments.map(tournament => {
-        const attempt = attempts.find(a => 
-          a.tournament.id === tournament.id && a.completed
-        );
-        return (
-          <div key={tournament.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-medium">{tournament.name}</h3>
-              <p className="text-sm text-gray-600">{tournament.category}</p>
-              <p className="text-xs text-gray-500">
-                Completed: {attempt?.completedAt ? new Date(attempt.completedAt).toLocaleDateString() : 'N/A'}
-              </p>
+              <h2 className="text-xl font-semibold">Completed Tournaments</h2>
+              <p className="text-sm text-gray-600">{completedTournaments.length} tournaments completed</p>
             </div>
-            <div className="text-right flex items-center space-x-4">
-              <div>
-                <div className="font-semibold text-lg">
-                  {attempt?.score || 0}/10
-                </div>
-                <div className="text-sm text-gray-500">
-                  {attempt?.score >= tournament.minPassingScore ? (
-                    <span className="text-green-600">Passed</span>
-                  ) : (
-                    <span className="text-red-600">Failed</span>
-                  )}
-                </div>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleReviewQuiz(tournament)}
-                className="px-3"
-              >
-                Review
-              </Button>
-            </div>
+            <Award className="h-5 w-5 text-blue-600" />
           </div>
-        );
-      })}
-    </div>
-  ) : (
-    <div className="text-center py-8">
-      <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-      <p className="text-gray-500">No completed tournaments yet</p>
-      <p className="text-sm text-gray-400">Start a tournament to see your results here</p>
-    </div>
-  )}
-</Card>
-
-<QuizReviewModal
-  attempt={selectedAttempt}
-  isOpen={showReviewModal}
-  onClose={() => {
-    setShowReviewModal(false);
-    setSelectedAttempt(null);
-  }}
-/>
-
+          
+          {completedTournaments.length > 0 ? (
+            <div className="space-y-4">
+              {completedTournaments.map(tournament => {
+                const attempt = attempts.find(a => 
+                  a.tournament.id === tournament.id && a.completed
+                );
+                return (
+                  <div key={tournament.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <h3 className="font-medium">{tournament.name}</h3>
+                      <p className="text-sm text-gray-600">{tournament.category}</p>
+                      <p className="text-xs text-gray-500">
+                        Completed: {attempt?.completedAt ? new Date(attempt.completedAt).toLocaleDateString() : 'N/A'}
+                      </p>
+                    </div>
+                    <div className="text-right flex items-center space-x-4">
+                      <div>
+                        <div className="font-semibold text-lg">
+                          {attempt?.score || 0}/10
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {attempt?.score >= tournament.minPassingScore ? (
+                            <span className="text-green-600">Passed</span>
+                          ) : (
+                            <span className="text-red-600">Failed</span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleReviewQuiz(tournament)}
+                        className="px-3"
+                      >
+                        Review
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No completed tournaments yet</p>
+              <p className="text-sm text-gray-400">Start a tournament to see your results here</p>
+            </div>
+          )}
+        </Card>
       </div>
+
+      <QuizReviewModal
+        attempt={selectedAttempt}
+        isOpen={showReviewModal}
+        onClose={() => {
+          setShowReviewModal(false);
+          setSelectedAttempt(null);
+        }}
+      />
     </div>
-    
   );
 };
 
