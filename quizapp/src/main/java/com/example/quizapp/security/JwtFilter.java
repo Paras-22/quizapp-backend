@@ -1,4 +1,3 @@
-// Update your quizapp/src/main/java/com/example/quizapp/security/JwtFilter.java
 package com.example.quizapp.security;
 
 import jakarta.servlet.FilterChain;
@@ -41,7 +40,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 System.out.println("DEBUG - Token valid for user: " + username + " with role: " + role);
 
-                // IMPORTANT FIX: Add ROLE_ prefix for Spring Security
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 username, null,

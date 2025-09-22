@@ -218,19 +218,21 @@ public class PlayerController {
         String currentUsername = getCurrentUsername();
 
         try {
-            // Use your actual field name: playerAttemptRepo (not attemptRepo)
+            // Verify the attempt exists and belongs to the current user
             PlayerAttempt attempt = playerAttemptRepo.findById(attemptId)
                     .orElseThrow(() -> new RuntimeException("Attempt not found"));
 
+            // Security check: ensure the attempt belongs to the current user
             if (!attempt.getPlayer().getUsername().equals(currentUsername)) {
                 return ResponseEntity.status(403).body("Access denied: Not your attempt");
             }
 
+            // Ensure the attempt is completed before allowing review
             if (!attempt.isCompleted()) {
                 return ResponseEntity.badRequest().body("Cannot review incomplete attempt");
             }
 
-            // Use your actual field name: playerAnswerRepo (not answerRepo)
+            // Fetch all answers for this attempt
             List<PlayerAnswer> answers = playerAnswerRepo.findByAttempt(attempt);
 
             return ResponseEntity.ok(answers);

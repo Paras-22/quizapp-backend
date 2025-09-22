@@ -268,7 +268,6 @@ public class UserController {
         return ResponseEntity.ok("User status toggled successfully");
     }
 
-
     @GetMapping("/stats")
     public ResponseEntity<?> getPlayerStats() {
         String currentUsername = getCurrentUsername();
@@ -311,8 +310,6 @@ public class UserController {
             return ResponseEntity.ok(stats);
 
         } catch (Exception e) {
-            System.err.println("Error calculating stats for user " + currentUsername + ": " + e.getMessage());
-
             // Return default stats in case of error
             Map<String, Object> defaultStats = new HashMap<>();
             defaultStats.put("tournamentsPlayed", 0);

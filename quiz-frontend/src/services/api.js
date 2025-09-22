@@ -173,7 +173,7 @@ async changePassword(passwordData) {
     return handleResponse(response);
   },
 
-  async getAttemptAnswers(attemptId) {
+async getAttemptAnswers(attemptId) {
   const response = await fetch(`${API_BASE_URL}/player/attempt/${attemptId}/answers`, {
     headers: getAuthHeaders()
   });

@@ -16,11 +16,12 @@ public class PlayerAnswer {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "attempt_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private PlayerAttempt attempt;
 
-    // FIXED: Changed from TournamentQuestion to Question
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false) // CHANGED TO EAGER
     @JoinColumn(name = "question_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Question question;
 
     @Column(nullable = false)
@@ -32,7 +33,7 @@ public class PlayerAnswer {
     @Column(nullable = false)
     private LocalDateTime answeredAt = LocalDateTime.now();
 
-
+    // Getters and setters
     public Long getId() { return id; }
 
     public PlayerAttempt getAttempt() {
@@ -40,8 +41,8 @@ public class PlayerAnswer {
     }
 
     public void setAttempt(PlayerAttempt attempt) { this.attempt = attempt; }
-    public Question getQuestion() { return question; }  // Returns Question
-    public void setQuestion(Question question) { this.question = question; }  // Accepts Question
+    public Question getQuestion() { return question; }
+    public void setQuestion(Question question) { this.question = question; }
     public String getSelectedAnswer() { return selectedAnswer; }
     public void setSelectedAnswer(String selectedAnswer) { this.selectedAnswer = selectedAnswer; }
     public boolean isCorrect() { return correct; }
