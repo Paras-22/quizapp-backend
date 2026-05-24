@@ -214,6 +214,13 @@ async getAttemptAnswers(attemptId) {
   return handleResponse(response);
 },
 
+async getLeaderboardPosition() {
+  const response = await fetch(`${API_BASE_URL}/player/leaderboard-position`, {
+    headers: getAuthHeaders()
+  });
+  return handleResponse(response);
+},
+
 
   // Additional methods for better error handling
   async testConnection() {
