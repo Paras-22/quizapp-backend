@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -174,15 +175,43 @@ public class PlayerService {
         return history;
     }
 
-    // Additional method for global leaderboard position
+    // Updated method for global leaderboard position — now calculates actual rank
     public Map<String, Object> getGlobalLeaderboardPosition(String username) {
-        // Here I add simplified logic to return leaderboard stats
-        List<PlayerAttempt> allCompletedAttempts = attemptRepo.findByCompletedTrueOrderByScoreDesc();
 
+        // Step 1 — get all completed attempts from all players
+        List<PlayerAttempt> allCompletedAttempts =
+                attemptRepo.findByCompletedTrueOrderByScoreDesc();
+
+        // Step 2 — calculate total score per player across all tournaments
+        Map<String, Integer> playerTotalScores = new HashMap<>();
+        for (PlayerAttempt attempt : allCompletedAttempts) {
+            String playerName = attempt.getPlayer().getUsername();
+            playerTotalScores.merge(playerName, attempt.getScore(), Integer::sum);
+        }
+
+        // Step 3 — sort all players by total score descending
+        List<Map.Entry<String, Integer>> sortedPlayers =
+                new ArrayList<>(playerTotalScores.entrySet());
+        sortedPlayers.sort((a, b) -> b.getValue().compareTo(a.getValue()));
+
+        // Step 4 — find current player's position in the sorted list
+        int rank = sortedPlayers.size() + 1; // default to last if not found
+        for (int i = 0; i < sortedPlayers.size(); i++) {
+            if (sortedPlayers.get(i).getKey().equals(username)) {
+                rank = i + 1; // ranks start from 1
+                break;
+            }
+        }
+
+        // Step 5 — get current player's total score
+        int playerTotalScore = playerTotalScores.getOrDefault(username, 0);
+
+        // Step 6 — build and return the response map
         Map<String, Object> position = new HashMap<>();
-        position.put("globalRank", "Not implemented yet");
-        position.put("totalPlayers", allCompletedAttempts.size());
+        position.put("globalRank", rank);
+        position.put("totalPlayers", playerTotalScores.size());
         position.put("playerAttempts", attemptRepo.findByPlayerUsername(username).size());
+        position.put("playerTotalScore", playerTotalScore);
 
         return position;
     }

@@ -1,7 +1,7 @@
-// Enhanced AdminDashboard.js with tournament categorization
+// Enhanced AdminDashboard.js with tournament categorization, most popular badge and no players warning
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
-import { Trophy, Users, Clock, Star, Plus, TrendingUp, Table, Grid, Calendar, CheckCircle, PlayCircle } from 'lucide-react';
+import { Trophy, Users, Clock, Star, Plus, TrendingUp, Table, Grid, Calendar, CheckCircle, PlayCircle, AlertTriangle } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import StatsCard from '../ui/StatsCard';
@@ -15,8 +15,8 @@ const AdminDashboard = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingTournament, setEditingTournament] = useState(null);
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
-  const [activeCategory, setActiveCategory] = useState('all'); // 'all', 'upcoming', 'active', 'completed'
+  const [viewMode, setViewMode] = useState('table');
+  const [activeCategory, setActiveCategory] = useState('all');
   const [categorizedTournaments, setCategorizedTournaments] = useState({
     upcoming: [],
     active: [],
@@ -31,6 +31,12 @@ const AdminDashboard = () => {
     completedTournaments: 0
   });
 
+  // find most popular tournament by highest likes
+  const [mostPopularId, setMostPopularId] = useState(null);
+
+  // fetch participant count for each tournament
+  const [participantCounts, setParticipantCounts] = useState({});
+
   useEffect(() => {
     loadDashboardData();
   }, []);
@@ -39,18 +45,18 @@ const AdminDashboard = () => {
     try {
       const data = await apiService.getTournaments();
       setTournaments(data);
-      
+
       // Categorize tournaments by status
       const categorized = categorizeTournaments(data);
       setCategorizedTournaments(categorized);
-      
+
       // Calculate enhanced stats
       const now = new Date();
       const active = data.filter(t => new Date(t.startDate) <= now && new Date(t.endDate) >= now);
       const upcoming = data.filter(t => new Date(t.startDate) > now);
       const completed = data.filter(t => new Date(t.endDate) < now);
       const totalLikes = data.reduce((sum, t) => sum + (t.likes || 0), 0);
-      
+
       setStats({
         totalTournaments: data.length,
         activeTournaments: active.length,
@@ -58,6 +64,28 @@ const AdminDashboard = () => {
         completedTournaments: completed.length,
         totalLikes: totalLikes
       });
+
+      // find most popular tournament by highest likes
+      if (data.length > 0) {
+        const maxLikes = Math.max(...data.map(t => t.likes || 0));
+        const popular = data.find(t => (t.likes || 0) === maxLikes && maxLikes > 0);
+        setMostPopularId(popular ? popular.id : null);
+      }
+
+      // fetch participant count for each tournament using scoreboard
+      const counts = {};
+      await Promise.all(
+        data.map(async (t) => {
+          try {
+            const scoreboard = await apiService.getScoreboard(t.id);
+            counts[t.id] = scoreboard.totalPlayers || 0;
+          } catch (err) {
+            counts[t.id] = 0;
+          }
+        })
+      );
+      setParticipantCounts(counts);
+
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -67,18 +95,18 @@ const AdminDashboard = () => {
 
   const categorizeTournaments = (tournaments) => {
     const now = new Date();
-    
+
     const upcoming = tournaments.filter(tournament => {
       const startDate = new Date(tournament.startDate);
       return startDate > now;
     });
-    
+
     const active = tournaments.filter(tournament => {
       const startDate = new Date(tournament.startDate);
       const endDate = new Date(tournament.endDate);
       return startDate <= now && endDate >= now;
     });
-    
+
     const completed = tournaments.filter(tournament => {
       const endDate = new Date(tournament.endDate);
       return endDate < now;
@@ -111,18 +139,18 @@ const AdminDashboard = () => {
   const handleDeleteTournament = async (id) => {
     const tournament = tournaments.find(t => t.id === id);
     const confirmMessage = `Are you sure you want to delete "${tournament?.name}"?\n\nThis action cannot be undone and will delete all related attempts and answers.`;
-    
+
     if (window.confirm(confirmMessage)) {
       try {
         setLoading(true);
         const result = await apiService.deleteTournament(id);
-        
+
         if (result && result.success) {
           alert(result.message || 'Tournament deleted successfully!');
         } else {
           alert('Tournament deleted successfully!');
         }
-        
+
         await loadDashboardData();
       } catch (error) {
         console.error('Error deleting tournament:', error);
@@ -153,6 +181,14 @@ const AdminDashboard = () => {
 
   const getCurrentTournaments = () => {
     return categorizedTournaments[activeCategory] || [];
+  };
+
+  // Check if a tournament has ended with zero players
+  const isNoPlayers = (tournament) => {
+    const now = new Date();
+    const ended = new Date(tournament.endDate) < now;
+    const noPlayers = (participantCounts[tournament.id] || 0) === 0;
+    return ended && noPlayers;
   };
 
   if (loading) {
@@ -239,7 +275,7 @@ const AdminDashboard = () => {
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
-            <TournamentForm 
+            <TournamentForm
               onSuccess={handleCreateSuccess}
               onCancel={() => setShowCreateForm(false)}
             />
@@ -251,7 +287,7 @@ const AdminDashboard = () => {
       {showEditForm && editingTournament && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
-            <TournamentForm 
+            <TournamentForm
               tournament={editingTournament}
               onSuccess={handleEditSuccess}
               onCancel={() => {
@@ -271,7 +307,7 @@ const AdminDashboard = () => {
             {getCurrentTournaments().length} tournament{getCurrentTournaments().length !== 1 ? 's' : ''}
           </span>
         </div>
-        
+
         {/* Category Filter Tabs */}
         <div className="flex space-x-2 mb-6 overflow-x-auto">
           {[
@@ -300,29 +336,79 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* Tournament Content */}
-        {viewMode === 'table' ? (
-          <TournamentTable
-            tournaments={getCurrentTournaments()}
-            onEdit={handleEditTournament}
-            onDelete={handleDeleteTournament}
-            loading={loading}
-            showViewQuestions={false}
-          />
-        ) : (
-          <TournamentList 
-            tournaments={getCurrentTournaments()}
-            isAdmin={true}
-            onDelete={handleDeleteTournament}
-            onEdit={handleEditTournament}
-            showViewQuestions={false}
-          />
-        )}
+        {/* ── Tournament list with badges ── */}
+        {getCurrentTournaments().length > 0 ? (
+          <div className="space-y-3">
+            {getCurrentTournaments().map(tournament => (
+              <div
+                key={tournament.id}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
+              >
+                {/* Left — name and badges */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="font-medium text-gray-900 truncate">
+                      {tournament.name}
+                    </h3>
 
-        {/* Empty State */}
-        {getCurrentTournaments().length === 0 && !loading && (
+                    {/* most popular badge for tournament with highest likes */}
+                    {tournament.id === mostPopularId && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 border border-yellow-300 rounded-full text-xs font-semibold whitespace-nowrap">
+                        🏆 Most Popular
+                      </span>
+                    )}
+
+                    {/* no players warning badge for ended tournaments with zero participants */}
+                    {isNoPlayers(tournament) && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 border border-red-300 rounded-full text-xs font-semibold whitespace-nowrap">
+                        <AlertTriangle className="h-3 w-3" />
+                        No Players
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                    <span>{tournament.category}</span>
+                    <span>•</span>
+                    <span>{tournament.difficulty}</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      <Star className="h-3 w-3 text-yellow-500" />
+                      {tournament.likes || 0} likes
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      <Users className="h-3 w-3 text-blue-500" />
+                      {participantCounts[tournament.id] || 0} players
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right — action buttons */}
+                <div className="flex items-center gap-2 ml-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEditTournament(tournament)}
+                    className="px-3"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDeleteTournament(tournament.id)}
+                    className="px-3 text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Empty State */
           <div className="text-center py-12">
-            {getCategoryIcon(activeCategory)}
             <div className="mx-auto mb-4 h-12 w-12 text-gray-400">
               {getCategoryIcon(activeCategory)}
             </div>
@@ -358,10 +444,10 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-blue-600 h-2 rounded-full"
-                      style={{ 
-                        width: `${stats.totalTournaments > 0 ? (stats.upcomingTournaments / stats.totalTournaments) * 100 : 0}%` 
+                      style={{
+                        width: `${stats.totalTournaments > 0 ? (stats.upcomingTournaments / stats.totalTournaments) * 100 : 0}%`
                       }}
                     ></div>
                   </div>
@@ -375,10 +461,10 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-green-600 h-2 rounded-full"
-                      style={{ 
-                        width: `${stats.totalTournaments > 0 ? (stats.activeTournaments / stats.totalTournaments) * 100 : 0}%` 
+                      style={{
+                        width: `${stats.totalTournaments > 0 ? (stats.activeTournaments / stats.totalTournaments) * 100 : 0}%`
                       }}
                     ></div>
                   </div>
@@ -392,10 +478,10 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-gray-600 h-2 rounded-full"
-                      style={{ 
-                        width: `${stats.totalTournaments > 0 ? (stats.completedTournaments / stats.totalTournaments) * 100 : 0}%` 
+                      style={{
+                        width: `${stats.totalTournaments > 0 ? (stats.completedTournaments / stats.totalTournaments) * 100 : 0}%`
                       }}
                     ></div>
                   </div>
